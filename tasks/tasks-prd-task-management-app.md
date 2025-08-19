@@ -170,18 +170,18 @@ Generated from: `prd-task-management-app.md`
   - [x] 5.8 Add board deletion with confirmation dialog
   - [x] 5.9 Implement basic board sharing functionality (invite collaborators)
 
-- [ ] 6.0 List and Task Management with Drag & Drop
-  - [ ] 6.1 Create TypeScript types for List and Task entities
-  - [ ] 6.2 Implement Board component to display individual board with lists
-  - [ ] 6.3 Create List component with inline editing and task display
-  - [ ] 6.4 Build Task component with title, description, due date, and labels
-  - [ ] 6.5 Implement TaskModal for detailed task editing
-  - [ ] 6.6 Set up @dnd-kit for drag and drop functionality
-  - [ ] 6.7 Implement drag and drop for tasks between lists
-  - [ ] 6.8 Add drag and drop for reordering lists within boards
-  - [ ] 6.9 Create task creation, editing, and deletion functionality
-  - [ ] 6.10 Implement due date picker and label management for tasks
-  - [ ] 6.11 Add list creation, renaming, and deletion functionality
+- [x] 6.0 List and Task Management with Drag & Drop
+  - [x] 6.1 Create TypeScript types for List and Task entities
+  - [x] 6.2 Implement Board component to display individual board with lists
+  - [x] 6.3 Create List component with inline editing and task display
+  - [x] 6.4 Build Task component with title, description, due date, and labels
+  - [x] 6.5 Implement TaskModal for detailed task editing
+  - [x] 6.6 Set up @dnd-kit for drag and drop functionality
+  - [x] 6.7 Implement drag and drop for tasks between lists
+  - [x] 6.8 Add drag and drop for reordering lists within boards
+  - [x] 6.9 Create task creation, editing, and deletion functionality
+  - [x] 6.10 Implement due date picker and label management for tasks
+  - [x] 6.11 Add list creation, renaming, and deletion functionality
 
 - [ ] 7.0 Real-time Collaboration Features
   - [ ] 7.1 Set up Supabase Realtime subscriptions for board changes
