@@ -17,15 +17,35 @@ export class ListService {
     try {
       logger.debug('Getting board lists', { boardId, userId })
 
-      // First verify user has access to the board
-      const { data: boardAccess } = await this.supabase
-        .from('board_collaborators')
-        .select('board_id')
-        .eq('board_id', boardId)
-        .eq('user_id', userId)
+      // First verify user has access to the board (either as owner or collaborator)
+      const { data: board } = await this.supabase
+        .from('boards')
+        .select('user_id')
+        .eq('id', boardId)
         .single()
 
-      if (!boardAccess) {
+      if (!board) {
+        logger.warn('Board not found', { boardId, userId })
+        throw createNotFoundError('Board')
+      }
+
+      // Check if user is the owner
+      const isOwner = board.user_id === userId
+
+      // If not owner, check if user is a collaborator
+      let hasAccess = isOwner
+      if (!isOwner) {
+        const { data: collaborator } = await this.supabase
+          .from('board_collaborators')
+          .select('board_id')
+          .eq('board_id', boardId)
+          .eq('user_id', userId)
+          .single()
+
+        hasAccess = !!collaborator
+      }
+
+      if (!hasAccess) {
         logger.warn('User does not have access to board', { boardId, userId })
         throw createNotFoundError('Board')
       }

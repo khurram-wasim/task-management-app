@@ -59,19 +59,11 @@ export class BoardService {
     try {
       logger.debug('Getting board by ID', { boardId, userId })
 
+      // Check if user has access to board
       const { data, error } = await this.supabase
         .from('boards')
         .select(`
           *,
-          board_collaborators (
-            user_id,
-            role,
-            users (
-              id,
-              email,
-              full_name
-            )
-          ),
           lists (
             id,
             name,
@@ -84,7 +76,7 @@ export class BoardService {
           )
         `)
         .eq('id', boardId)
-        .or(`user_id.eq.${userId},board_collaborators.user_id.eq.${userId}`)
+        .eq('user_id', userId)
         .single()
 
       if (error || !data) {

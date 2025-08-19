@@ -59,7 +59,7 @@ router.use(requireAuth)
 // GET /api/boards - Get all boards for the authenticated user
 router.get(
   '/',
-  validate(querySchemas.boardFilters, 'query'),
+  validate(querySchemas.pagination, 'query'),
   asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.user!.id
     const page = parseNumber(req.query['page'] as string, 1)

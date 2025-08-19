@@ -1,3 +1,4 @@
+export { Board } from './Board'
 export { BoardCard, BoardCardSkeleton, NoBoardsState } from './BoardCard'
 export { BoardList } from './BoardList'
 export { CreateBoardModal } from './CreateBoardModal'

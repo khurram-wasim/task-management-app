@@ -65,6 +65,9 @@ router.get(
     const userId = req.user!.id
     const boardId = req.query['boardId'] as string
 
+    console.log('Lists endpoint - query params:', req.query)
+    console.log('Lists endpoint - boardId:', boardId)
+
     if (!boardId) {
       ResponseHelper.badRequest(res, 'boardId query parameter is required')
       return

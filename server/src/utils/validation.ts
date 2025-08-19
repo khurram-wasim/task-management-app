@@ -235,6 +235,7 @@ export const querySchemas = {
   
   boardFilters: Joi.object({
     ...commonSchemas.pagination,
+    boardId: commonSchemas.uuid.required(),
     collaboratorId: commonSchemas.uuid.optional()
   }),
   
