@@ -121,16 +121,7 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
   }
 
   return (
-    <div className="w-full max-w-md mx-auto">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Create your account
-        </h1>
-        <p className="text-gray-600">
-          Join us and start managing your tasks today
-        </p>
-      </div>
-
+    <div className="w-full">
       <form onSubmit={handleSubmit} className="space-y-6">
         {errors.general && (
           <div className="bg-red-50 border border-red-200 rounded-md p-4">

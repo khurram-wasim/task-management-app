@@ -91,16 +91,7 @@ export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
   }
 
   return (
-    <div className="w-full max-w-md mx-auto">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Welcome back
-        </h1>
-        <p className="text-gray-600">
-          Sign in to your account to continue
-        </p>
-      </div>
-
+    <div className="w-full">
       <form onSubmit={handleSubmit} className="space-y-6">
         {errors.general && (
           <div className="bg-red-50 border border-red-200 rounded-md p-4">
