@@ -4,6 +4,7 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { Login } from '@/pages/Login'
 import { Register } from '@/pages/Register'
 import { Dashboard } from '@/pages/Dashboard'
+import { BoardView } from '@/pages/BoardView'
 import './App.css'
 
 function App() {
@@ -18,6 +19,22 @@ function App() {
           {/* Protected routes */}
           <Route 
             path="/dashboard" 
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/board/:boardId" 
+            element={
+              <ProtectedRoute>
+                <BoardView />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/boards" 
             element={
               <ProtectedRoute>
                 <Dashboard />

@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { LoginForm } from '@/components/auth/LoginForm'
+import { AuthLayout } from '@/components/layout'
 
 export function Login() {
   const navigate = useNavigate()
@@ -23,13 +24,14 @@ export function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <LoginForm 
-          onSuccess={handleLoginSuccess}
-          onSwitchToRegister={handleSwitchToRegister}
-        />
-      </div>
-    </div>
+    <AuthLayout
+      title="Welcome back"
+      subtitle="Sign in to your account to continue"
+    >
+      <LoginForm 
+        onSuccess={handleLoginSuccess}
+        onSwitchToRegister={handleSwitchToRegister}
+      />
+    </AuthLayout>
   )
 }

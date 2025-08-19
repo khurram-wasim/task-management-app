@@ -144,14 +144,14 @@ Generated from: `prd-task-management-app.md`
   - [x] 3.7 Implement protected route wrapper for authenticated pages
   - [x] 3.8 Add user session persistence and automatic logout handling
 
-- [ ] 4.0 Core Component Architecture and UI Foundation
-  - [ ] 4.1 Create reusable UI components (Button, Modal, Card, Input, Textarea)
-  - [ ] 4.2 Implement Layout component with Header and main content area
-  - [ ] 4.3 Create Header component with navigation and user menu
-  - [ ] 4.4 Set up routing with React Router (Dashboard, BoardView, Login, Register)
-  - [ ] 4.5 Implement global CSS styles and design system variables
-  - [ ] 4.6 Create loading and error state components
-  - [ ] 4.7 Set up responsive design foundations for desktop-first approach
+- [x] 4.0 Core Component Architecture and UI Foundation
+  - [x] 4.1 Create reusable UI components (Button, Modal, Card, Input, Textarea)
+  - [x] 4.2 Implement Layout component with Header and main content area
+  - [x] 4.3 Create Header component with navigation and user menu
+  - [x] 4.4 Set up routing with React Router (Dashboard, BoardView, Login, Register)
+  - [x] 4.5 Implement global CSS styles and design system variables
+  - [x] 4.6 Create loading and error state components
+  - [x] 4.7 Set up responsive design foundations for desktop-first approach
 
 - [ ] 5.0 Board Management Features
   - [ ] 5.1 Create TypeScript types for Board entity and related operations
