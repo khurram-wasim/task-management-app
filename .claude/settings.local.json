@@ -10,7 +10,15 @@
       "Bash(npm test:*)",
       "Bash(npm run build:*)",
       "Bash(git add:*)",
-      "Bash(git init:*)"
+      "Bash(git init:*)",
+      "mcp__supabase__apply_migration",
+      "mcp__supabase__execute_sql",
+      "Bash(curl:*)",
+      "Bash(npm run typecheck:*)",
+      "mcp__supabase__get_project",
+      "mcp__supabase__list_tables",
+      "Bash(npx tsc:*)",
+      "mcp__supabase__list_projects"
     ],
     "deny": [],
     "ask": []

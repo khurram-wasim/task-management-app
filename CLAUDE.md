@@ -4,126 +4,187 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a React application with TypeScript support, built using Vite as the build tool. The project is intended to become a Task Management Application (Trello clone) as outlined in the PRD. Currently it contains the default Vite + React template as a starting point.
+This is a full-stack Task Management Application (Trello clone) built with React + TypeScript frontend, Node.js + Express backend, and Supabase as the database. The project is in active development with authentication, core data models, and testing infrastructure already implemented.
 
 ## Development Commands
 
-### Core Development
+### Frontend (React App)
 - `npm run dev` - Start development server with hot module replacement
-- `npm run build` - Build for production (runs TypeScript compilation + Vite build)
+- `npm run build` - Build for production (TypeScript compilation + Vite build)
 - `npm run preview` - Preview the production build locally
 - `npm run lint` - Run ESLint for code quality checks
+- `npm test` - Run Vitest tests in watch mode
+- `npm run test:run` - Run tests once
+- `npm run test:ui` - Run tests with UI interface
 
-### Missing Commands (To Be Added)
-Based on the project requirements, these commands should be added:
-- `npm test` - Run tests (Jest/Vitest + React Testing Library)
-- `npm run typecheck` - Run TypeScript type checking separately
-- `npm run format` - Code formatting with Prettier
+### Backend (server/ directory)
+- `npm run dev` - Start backend development server with tsx watch
+- `npm run build` - Compile TypeScript to JavaScript
+- `npm run start` - Start production server from compiled JS
+- `npm test` - Run backend tests with Vitest
+- `npm run test:watch` - Run backend tests in watch mode
+- `npm run lint` - Run ESLint on backend code
+- `npm run typecheck` - Run TypeScript type checking without emitting files
 
-## Technology Stack
+## Architecture Overview
 
-### Current Stack
-- **React 19.1.1** - Latest React with modern hooks and concurrent features
-- **TypeScript 5.8.3** - Strict type checking enabled
-- **Vite 7.1.2** - Fast build tool and development server
-- **ESLint 9.33.0** - Code linting with React-specific rules
+### Full-Stack Architecture
+The application uses a **client-server architecture** with:
+- **Frontend**: React SPA that communicates with backend API
+- **Backend**: Node.js Express server handling API routes and business logic
+- **Database**: Supabase PostgreSQL with Row Level Security
+- **Real-time**: Supabase Realtime for live collaboration features
 
-### Planned Additions (Per PRD)
-- **Supabase** - Backend as a service for database and real-time features
-- **Drag & Drop Library** - @dnd-kit or react-dnd for Kanban functionality
-- **CSS Framework** - CSS Modules, Styled Components, or Tailwind CSS
-- **State Management** - Context API or Redux Toolkit for complex state
-- **Testing** - Jest/Vitest + React Testing Library + Cypress for E2E
-
-## Architecture Guidelines
-
-### Current Structure
+### Project Structure
 ```
-src/
-├── App.tsx          # Main application component (currently default template)
-├── main.tsx         # React application entry point
-├── App.css          # Application styles
-├── index.css        # Global styles
-├── assets/          # Static assets (images, icons)
-└── vite-env.d.ts    # Vite TypeScript declarations
-```
-
-### Planned Architecture (Task Management App)
-Based on the PRD, the application should be structured as:
-```
-src/
-├── components/      # Reusable UI components (Button, Card, Modal, etc.)
-├── pages/          # Page components (Dashboard, Board, etc.)
-├── hooks/          # Custom React hooks
-├── services/       # API calls and Supabase integration
-├── types/          # TypeScript type definitions
-├── utils/          # Utility functions
-├── context/        # React Context providers for state management
-└── constants/      # Application constants
+/
+├── src/                    # Frontend React application
+│   ├── components/         # UI components (auth/, ui/, layout/)
+│   ├── contexts/          # React Context providers (AuthContext)
+│   ├── hooks/             # Custom hooks (useAuth, useRealtime)
+│   ├── lib/               # Third-party integrations (supabase, auth, realtime)
+│   ├── types/             # TypeScript definitions for entities
+│   └── utils/             # Utility functions (classNames, dateHelpers)
+│
+├── server/                # Backend Node.js application
+│   ├── src/
+│   │   ├── config/        # Database and environment configuration
+│   │   ├── controllers/   # Route handlers (planned)
+│   │   ├── middleware/    # Auth, security, error handling
+│   │   ├── routes/        # API route definitions (auth, boards)
+│   │   ├── services/      # Business logic (auth, database operations)
+│   │   └── types/         # Backend TypeScript types
+│
+└── tasks/                 # Development task tracking and PRD documentation
 ```
 
-### Key Components to Implement
-- **Board Management**: Board list, Board view, Board creation/editing
-- **List Management**: Kanban lists with CRUD operations
-- **Task Management**: Task cards with drag & drop, labels, due dates
-- **Authentication**: Login/register forms with Supabase Auth
-- **Real-time Updates**: Supabase Realtime subscriptions for collaboration
+## Key Technology Decisions
 
-## Build Configuration
+### Frontend Stack
+- **React 19.1.1** with functional components and hooks
+- **TypeScript** with strict mode and path mapping (`@/` aliases)
+- **Vite** for fast development and optimized builds
+- **@dnd-kit** for drag and drop functionality
+- **Vitest + React Testing Library** for comprehensive testing
+- **date-fns** for date manipulation, **clsx** for conditional classes
 
-### Vite Configuration
-- Uses `@vitejs/plugin-react` for React support
-- Hot Module Replacement enabled
-- TypeScript compilation integrated
+### Backend Stack  
+- **Node.js 18+** with **Express.js** framework
+- **TypeScript** with strict configuration
+- **Supabase client** for database operations
+- **JWT + bcrypt** for authentication
+- **Helmet + CORS + Rate limiting** for security
+- **WebSockets (ws)** for real-time features
 
-### TypeScript Configuration
-- Project references architecture with separate configs:
-  - `tsconfig.app.json` - Application code
-  - `tsconfig.node.json` - Node.js/build tools
-- Strict type checking recommended for production
+### Database Design
+Supabase PostgreSQL schema with these core entities:
+- **users** (managed by Supabase Auth)
+- **boards** (user-owned with collaborators)
+- **lists** (ordered within boards)  
+- **tasks** (ordered within lists with labels)
+- **board_collaborators** (many-to-many user-board relationship)
+- **task_labels** (flexible labeling system)
 
-### ESLint Configuration
-- Modern flat config format
-- React Hooks rules enforced
-- React Refresh support for development
-- TypeScript-aware linting rules
+## Path Mapping and Import Conventions
+
+The project uses path mapping for clean imports:
+```typescript
+// Instead of relative imports:
+import { cn } from '../../../utils/classNames'
+
+// Use absolute imports with @ alias:
+import { cn } from '@/utils/classNames'
+import { supabase } from '@/lib/supabase'
+import { AuthContext } from '@/contexts/AuthContext'
+```
+
+Available path aliases:
+- `@/*` → `src/*`
+- `@/components/*` → `src/components/*`
+- `@/pages/*` → `src/pages/*`
+- `@/hooks/*` → `src/hooks/*`
+- `@/utils/*` → `src/utils/*`
+- `@/types/*` → `src/types/*`
+- `@/lib/*` → `src/lib/*`
+- `@/contexts/*` → `src/contexts/*`
+
+## Authentication Architecture
+
+The app uses **Supabase Auth** with a custom backend layer:
+- **Frontend**: AuthContext provides user state and auth methods
+- **Backend**: Auth middleware validates JWT tokens for protected routes
+- **Database**: RLS policies secure data access per user
+- **Flow**: Frontend → Backend API → Supabase (with user context)
+
+Key files:
+- `src/contexts/AuthContext.tsx` - React authentication context
+- `src/hooks/useAuth.ts` - Authentication hook
+- `src/lib/auth.ts` - Auth utilities and Supabase integration
+- `server/src/services/auth.service.ts` - Backend auth logic
+- `server/src/middleware/auth.ts` - JWT validation middleware
+
+## Real-time Features
+
+Real-time collaboration uses **Supabase Realtime**:
+- `src/lib/realtime.ts` - Realtime subscription utilities
+- `src/hooks/useRealtime.ts` - Hooks for subscribing to changes
+- Subscriptions for boards, lists, and tasks tables
+- Optimistic updates for better UX
+
+## Testing Strategy
+
+**Frontend Testing:**
+- **Vitest** as test runner with jsdom environment
+- **React Testing Library** for component testing
+- **@testing-library/jest-dom** matchers
+- Tests co-located with components (`.test.tsx` files)
+- Setup file: `src/test/setup.ts`
+
+**Backend Testing:**
+- **Vitest** for unit and integration tests
+- Database service and auth service testing
+- Environment-specific test configuration
 
 ## Development Workflow
 
-### Getting Started
-1. `npm install` - Install dependencies
-2. `npm run dev` - Start development server
-3. Navigate to `http://localhost:5173`
+### Initial Setup
+1. `npm install` in root (frontend dependencies)
+2. `cd server && npm install` (backend dependencies) 
+3. Set up `.env.local` with Supabase credentials
+4. Set up `server/.env` with backend environment variables
 
-### Code Quality Checks
-1. `npm run lint` - Check for linting errors
-2. `npm run build` - Verify production build works
-3. TypeScript compilation happens during build
+### Working with the Codebase
+1. **Use TypeScript types** - All entities are strongly typed in `src/types/index.ts`
+2. **Follow path mapping** - Use `@/` imports instead of relative paths
+3. **Test-driven development** - Write tests alongside implementation
+4. **Supabase MCP integration** - Use MCP tools for database operations when available
+5. **Real-time first** - Consider real-time implications for all data changes
 
-### Future Workflow (Post-Setup)
-1. Run tests before committing
-2. Use Supabase local development environment
-3. Test drag & drop functionality across browsers
-4. Verify real-time updates work correctly
+### Code Quality Standards
+- **TypeScript strict mode** enabled with comprehensive type checking
+- **ESLint** configured for React and backend patterns
+- **Vitest** for fast unit and integration testing
+- **Co-location** - Keep tests next to the code they test
 
-## Project Requirements Context
+## Current Implementation Status
 
-This application is being built according to a comprehensive PRD that specifies:
-- **Core Features**: Kanban boards, lists, tasks with drag & drop
-- **Authentication**: User registration/login with Supabase
-- **Real-time Collaboration**: Live updates when multiple users edit boards
-- **Data Model**: Users → Boards → Lists → Tasks hierarchy
-- **Performance**: Code splitting, lazy loading, optimal bundle size
-- **Testing**: 80%+ coverage for critical functionality
+**Completed:**
+- ✅ Project setup and dependencies (React, Node.js, Supabase)
+- ✅ TypeScript configuration with path mapping
+- ✅ Testing infrastructure (Vitest + React Testing Library)
+- ✅ Database schema and Row Level Security policies
+- ✅ Authentication system (frontend + backend)
+- ✅ Real-time utilities and hooks
+- ✅ Basic utility functions and helpers
+- ✅ Backend API architecture with auth routes
 
-The project emphasizes modern React patterns, TypeScript safety, and leveraging AI tools (including Claude with MCP integrations) for accelerated development.
+**In Progress:**
+- 🚧 Backend API routes (boards completed, lists/tasks pending)
+- 🚧 Frontend-backend integration
+- 🚧 Core UI components
 
-## Immediate Next Steps
-
-1. Set up testing framework (Jest/Vitest + React Testing Library)
-2. Configure Prettier for code formatting
-3. Integrate Supabase for backend services
-4. Implement basic authentication flow
-5. Create foundational UI components
-6. Set up drag & drop functionality
-7. Implement real-time subscriptions
+**Next Priority:**
+- List and Task API routes
+- Board management UI components  
+- Drag and drop implementation
+- Real-time collaboration features

@@ -11,10 +11,21 @@ Generated from: `prd-task-management-app.md`
 - `src/lib/supabase.test.ts` - Unit tests for Supabase configuration
 - `src/test/setup.ts` - Vitest test setup with jest-dom matchers ✓
 - `src/App.test.tsx` - Example test file demonstrating testing configuration ✓
-- `vite.config.ts` - Updated with Vitest configuration ✓
-- `src/types/index.ts` - TypeScript type definitions for Board, List, Task, User entities
-- `src/hooks/useAuth.ts` - Custom hook for authentication state management
-- `src/hooks/useAuth.test.ts` - Unit tests for authentication hook
+- `vite.config.ts` - Updated with Vitest configuration and path mapping ✓
+- `tsconfig.app.json` - Updated with path mapping for cleaner imports ✓
+- `README.md` - Updated project documentation with path mapping examples ✓
+- `src/types/index.ts` - TypeScript type definitions for Board, List, Task, User entities ✓
+- `src/hooks/useAuth.ts` - Custom hook for authentication state management ✓
+- `src/hooks/useAuth.test.ts` - Unit tests for authentication hook (integrated into auth.test.ts) ✓
+- `src/lib/auth.ts` - Authentication utilities with Supabase integration ✓
+- `src/lib/auth.test.ts` - Unit tests for authentication utilities ✓
+- `src/contexts/AuthContext.tsx` - Authentication context provider ✓
+- `src/contexts/AuthContext.test.tsx` - Unit tests for authentication context ✓
+- `src/components/auth/ProtectedRoute.tsx` - Component for route protection ✓
+- `src/lib/realtime.ts` - Realtime utilities for Supabase subscriptions ✓
+- `src/lib/realtime.test.ts` - Unit tests for realtime utilities ✓
+- `src/hooks/useRealtime.ts` - Custom hooks for realtime subscriptions ✓
+- `src/hooks/useRealtime.test.ts` - Unit tests for realtime hooks ✓
 - `src/hooks/useBoard.ts` - Custom hook for board operations and real-time updates
 - `src/hooks/useBoard.test.ts` - Unit tests for board hook
 - `src/contexts/AuthContext.tsx` - Authentication context provider
@@ -59,6 +70,17 @@ Generated from: `prd-task-management-app.md`
 - `src/utils/dateHelpers.test.ts` - Unit tests for date helpers ✓
 - `src/utils/classNames.ts` - Utility for conditional class name joining with clsx ✓
 - `src/utils/classNames.test.ts` - Unit tests for class name utilities ✓
+- `server/src/services/list.service.ts` - List service for CRUD operations and business logic ✓
+- `server/src/routes/list.routes.ts` - List API routes with authentication and validation ✓
+- `server/src/services/task.service.ts` - Task service for CRUD operations and label management ✓
+- `server/src/routes/task.routes.ts` - Task API routes with move and label endpoints ✓
+- `server/src/config/swagger.ts` - Comprehensive OpenAPI 3.0 specification with all endpoints ✓
+- `server/src/utils/validation.ts` - Enhanced Joi validation schemas with detailed error messages ✓
+- `src/lib/api.ts` - Complete API client for backend communication with auth management ✓
+- `src/lib/websocket.ts` - WebSocket client for real-time features with auto-reconnection ✓
+- `src/hooks/useBoards.ts` - Board management hook using backend API ✓
+- `src/hooks/useLists.ts` - List management hook using backend API ✓
+- `src/hooks/useTasks.ts` - Task management hook using backend API ✓
 - `supabase/migrations/001_initial_schema.sql` - Initial database schema migration
 - `supabase/migrations/002_rls_policies.sql` - Row Level Security policies migration
 - `supabase/seed.sql` - Sample data for development and testing
@@ -72,7 +94,7 @@ Generated from: `prd-task-management-app.md`
 
 ## Tasks
 
-- [ ] 1.0 Project Setup and Dependencies
+- [x] 1.0 Project Setup and Dependencies
   - [x] 1.1 Install and configure Supabase client library (@supabase/supabase-js)
   - [x] 1.2 Install drag and drop library (@dnd-kit/core, @dnd-kit/sortable, @dnd-kit/utilities)
   - [x] 1.3 Install and configure testing framework (Vitest + @testing-library/react)
@@ -80,14 +102,37 @@ Generated from: `prd-task-management-app.md`
   - [x] 1.5 Set up environment variables file (.env.local) for Supabase configuration
   - [x] 1.6 Update tsconfig.json with path mapping for cleaner imports
 
-- [ ] 2.0 Supabase Backend Configuration
-  - [ ] 2.1 Create Supabase project and obtain API keys
-  - [ ] 2.2 Design and create database schema using MCP tools (Users, Boards, Lists, Tasks, Board_Collaborators, Task_Labels)
-  - [ ] 2.3 Set up Row Level Security (RLS) policies using MCP for data protection
-  - [ ] 2.4 Configure Supabase authentication settings (email/password)
-  - [ ] 2.5 Enable Realtime subscriptions for boards, lists, and tasks tables
-  - [ ] 2.6 Create seed data for development and testing using MCP
-  - [ ] 2.7 Set up Supabase client configuration in src/lib/supabase.ts
+- [x] 2.0 Supabase Backend Configuration
+  - [x] 2.1 Create Supabase project and obtain API keys
+  - [x] 2.2 Design and create database schema using MCP tools (Users, Boards, Lists, Tasks, Board_Collaborators, Task_Labels)
+  - [x] 2.3 Set up Row Level Security (RLS) policies using MCP for data protection
+  - [x] 2.4 Configure Supabase authentication settings (email/password)
+  - [x] 2.5 Enable Realtime subscriptions for boards, lists, and tasks tables
+  - [x] 2.6 Create seed data for development and testing using MCP
+
+- [x] 2.1 Node.js Backend Architecture Setup
+  - [x] 2.1.1 Create Express.js server with TypeScript configuration
+  - [x] 2.1.2 Set up backend project structure and dependencies
+  - [x] 2.1.3 Configure environment variables for backend
+  - [x] 2.1.4 Set up Supabase client in backend (move from frontend)
+  - [x] 2.1.5 Create authentication middleware for protected routes
+  - [x] 2.1.6 Set up error handling middleware and request validation
+
+- [x] 2.2 Backend API Routes Implementation
+  - [x] 2.2.1 Create authentication routes (POST /auth/login, /auth/register, /auth/logout)
+  - [x] 2.2.2 Create board routes (GET, POST, PUT, DELETE /api/boards)
+  - [x] 2.2.3 Create list routes (GET, POST, PUT, DELETE /api/lists)
+  - [x] 2.2.4 Create task routes (GET, POST, PUT, DELETE /api/tasks)
+  - [x] 2.2.5 Implement real-time WebSocket or Server-Sent Events for live updates
+  - [x] 2.2.6 Add API documentation and validation schemas
+
+- [x] 2.3 Frontend Integration with Backend
+  - [x] 2.3.1 Create API client utility for backend communication
+  - [x] 2.3.2 Update authentication context to use backend API
+  - [x] 2.3.3 Update existing Supabase hooks to use backend API
+  - [x] 2.3.4 Modify real-time subscriptions to work with backend
+  - [x] 2.3.5 Update environment variables for API URL configuration
+  - [x] 2.3.6 Test end-to-end authentication and data flow
 
 - [ ] 3.0 Authentication System Implementation
   - [ ] 3.1 Create TypeScript types for User and authentication states

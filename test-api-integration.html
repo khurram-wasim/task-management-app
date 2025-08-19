@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Integration Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .pending { background-color: #fff3cd; border-color: #ffecb5; }
+        button { margin: 5px; padding: 10px 15px; cursor: pointer; }
+        pre { background-color: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        .log { height: 200px; overflow-y: auto; background-color: #f8f9fa; padding: 10px; border: 1px solid #ddd; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>Task Management API Integration Test</h1>
+    
+    <div class="test-section pending" id="connectivity-test">
+        <h2>1. Backend Connectivity Test</h2>
+        <p>Testing if backend server is reachable...</p>
+        <button onclick="testConnectivity()">Test Connection</button>
+        <pre id="connectivity-result"></pre>
+    </div>
+
+    <div class="test-section pending" id="health-test">
+        <h2>2. Health Check Test</h2>
+        <p>Testing API health endpoint...</p>
+        <button onclick="testHealthCheck()">Test Health</button>
+        <pre id="health-result"></pre>
+    </div>
+
+    <div class="test-section pending" id="swagger-test">
+        <h2>3. Swagger Documentation Test</h2>
+        <p>Testing API documentation availability...</p>
+        <button onclick="testSwagger()">Test Swagger</button>
+        <pre id="swagger-result"></pre>
+    </div>
+
+    <div class="test-section pending" id="cors-test">
+        <h2>4. CORS Configuration Test</h2>
+        <p>Testing cross-origin requests from frontend...</p>
+        <button onclick="testCors()">Test CORS</button>
+        <pre id="cors-result"></pre>
+    </div>
+
+    <div class="test-section pending" id="websocket-test">
+        <h2>5. WebSocket Connection Test</h2>
+        <p>Testing WebSocket connectivity (without authentication)...</p>
+        <button onclick="testWebSocket()">Test WebSocket</button>
+        <pre id="websocket-result"></pre>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Log</h2>
+        <div class="log" id="test-log"></div>
+        <button onclick="clearLog()">Clear Log</button>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:3001/api';
+        
+        function log(message) {
+            const logDiv = document.getElementById('test-log');
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `[${timestamp}] ${message}\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        function updateTestStatus(testId, status, result) {
+            const testDiv = document.getElementById(testId);
+            const resultPre = document.getElementById(testId.replace('-test', '-result'));
+            
+            testDiv.className = `test-section ${status}`;
+            resultPre.textContent = result;
+        }
+        
+        async function testConnectivity() {
+            log('Testing backend connectivity...');
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`);
+                if (response.ok) {
+                    updateTestStatus('connectivity-test', 'success', 'Backend is reachable ✓');
+                    log('✓ Backend connectivity successful');
+                } else {
+                    updateTestStatus('connectivity-test', 'error', `HTTP ${response.status}: ${response.statusText}`);
+                    log('✗ Backend returned error status');
+                }
+            } catch (error) {
+                updateTestStatus('connectivity-test', 'error', `Connection failed: ${error.message}`);
+                log(`✗ Backend connectivity failed: ${error.message}`);
+            }
+        }
+        
+        async function testHealthCheck() {
+            log('Testing health check endpoint...');
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`);
+                if (response.ok) {
+                    const data = await response.json();
+                    const result = JSON.stringify(data, null, 2);
+                    updateTestStatus('health-test', 'success', `Health check passed ✓\n${result}`);
+                    log('✓ Health check successful');
+                } else {
+                    updateTestStatus('health-test', 'error', `HTTP ${response.status}: ${response.statusText}`);
+                    log('✗ Health check failed');
+                }
+            } catch (error) {
+                updateTestStatus('health-test', 'error', `Health check failed: ${error.message}`);
+                log(`✗ Health check error: ${error.message}`);
+            }
+        }
+        
+        async function testSwagger() {
+            log('Testing Swagger documentation...');
+            try {
+                const response = await fetch(`http://localhost:3001/api-docs/swagger.json`);
+                if (response.ok) {
+                    const data = await response.json();
+                    const pathCount = Object.keys(data.paths || {}).length;
+                    updateTestStatus('swagger-test', 'success', `Swagger docs available ✓\nFound ${pathCount} documented endpoints`);
+                    log(`✓ Swagger documentation available with ${pathCount} endpoints`);
+                } else {
+                    updateTestStatus('swagger-test', 'error', `HTTP ${response.status}: ${response.statusText}`);
+                    log('✗ Swagger documentation not available');
+                }
+            } catch (error) {
+                updateTestStatus('swagger-test', 'error', `Swagger test failed: ${error.message}`);
+                log(`✗ Swagger test error: ${error.message}`);
+            }
+        }
+        
+        async function testCors() {
+            log('Testing CORS configuration...');
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Origin': 'http://localhost:5173'
+                    }
+                });
+                
+                if (response.ok) {
+                    const corsHeaders = {
+                        'Access-Control-Allow-Origin': response.headers.get('Access-Control-Allow-Origin'),
+                        'Access-Control-Allow-Methods': response.headers.get('Access-Control-Allow-Methods'),
+                        'Access-Control-Allow-Headers': response.headers.get('Access-Control-Allow-Headers')
+                    };
+                    
+                    updateTestStatus('cors-test', 'success', `CORS configured ✓\nHeaders: ${JSON.stringify(corsHeaders, null, 2)}`);
+                    log('✓ CORS configuration working');
+                } else {
+                    updateTestStatus('cors-test', 'error', `CORS test failed: HTTP ${response.status}`);
+                    log('✗ CORS test failed');
+                }
+            } catch (error) {
+                updateTestStatus('cors-test', 'error', `CORS test failed: ${error.message}`);
+                log(`✗ CORS test error: ${error.message}`);
+            }
+        }
+        
+        async function testWebSocket() {
+            log('Testing WebSocket connection...');
+            try {
+                const ws = new WebSocket('ws://localhost:3001/api/ws');
+                
+                const timeout = setTimeout(() => {
+                    ws.close();
+                    updateTestStatus('websocket-test', 'error', 'WebSocket connection timeout');
+                    log('✗ WebSocket connection timeout');
+                }, 5000);
+                
+                ws.onopen = () => {
+                    clearTimeout(timeout);
+                    updateTestStatus('websocket-test', 'success', 'WebSocket connection successful ✓');
+                    log('✓ WebSocket connection established');
+                    ws.close();
+                };
+                
+                ws.onerror = (error) => {
+                    clearTimeout(timeout);
+                    updateTestStatus('websocket-test', 'error', `WebSocket error: ${error.message || 'Connection failed'}`);
+                    log('✗ WebSocket connection failed');
+                };
+                
+                ws.onclose = (event) => {
+                    if (event.code !== 1000) { // Not normal closure
+                        clearTimeout(timeout);
+                        updateTestStatus('websocket-test', 'error', `WebSocket closed unexpectedly: Code ${event.code}`);
+                        log(`✗ WebSocket closed unexpectedly: Code ${event.code}`);
+                    }
+                };
+                
+            } catch (error) {
+                updateTestStatus('websocket-test', 'error', `WebSocket test failed: ${error.message}`);
+                log(`✗ WebSocket test error: ${error.message}`);
+            }
+        }
+        
+        function clearLog() {
+            document.getElementById('test-log').innerHTML = '';
+        }
+        
+        // Auto-run basic connectivity test on page load
+        window.onload = function() {
+            log('API Integration Test Started');
+            setTimeout(testConnectivity, 500);
+        };
+    </script>
+</body>
+</html>
