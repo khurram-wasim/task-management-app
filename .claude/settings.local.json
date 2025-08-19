@@ -21,7 +21,15 @@
       "mcp__supabase__list_projects",
       "mcp__supabase__get_anon_key",
       "Bash(npx tailwindcss init:*)",
-      "Bash(npm run lint)"
+      "Bash(npm run lint)",
+      "Bash(npm run:*)",
+      "Bash(ping:*)",
+      "Bash(lsof:*)",
+      "Bash(kill:*)",
+      "Bash(nslookup:*)",
+      "Bash(node:*)",
+      "Bash(sudo dscacheutil:*)",
+      "Bash(sudo killall:*)"
     ],
     "deny": [],
     "ask": []

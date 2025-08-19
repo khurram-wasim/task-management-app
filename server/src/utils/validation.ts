@@ -135,7 +135,6 @@ export const boardSchemas = {
   
   addCollaborator: Joi.object({
     email: commonSchemas.email,
-    boardId: commonSchemas.uuid,
     role: Joi.string().valid('member', 'admin').default('member').messages({
       'any.only': 'Role must be either "member" or "admin"'
     })

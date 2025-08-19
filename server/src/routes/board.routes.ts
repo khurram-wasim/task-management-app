@@ -240,13 +240,13 @@ router.delete(
  *       500:
  *         $ref: '#/components/responses/InternalServerError'
  */
-// POST /api/boards/:id/collaborators - Add a collaborator to a board
+// POST /api/boards/:boardId/collaborators - Add a collaborator to a board
 router.post(
-  '/:id/collaborators',
-  validate(paramSchemas.id, 'params'),
+  '/:boardId/collaborators',
+  validate(paramSchemas.boardId, 'params'),
   validate(boardSchemas.addCollaborator),
   asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-    const { id: boardId } = req.params
+    const { boardId } = req.params
     const { email } = req.body as AddCollaboratorRequest
     const userId = req.user!.id
     const role = req.body.role || 'member' // Default to member if not specified

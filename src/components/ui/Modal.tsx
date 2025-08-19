@@ -155,7 +155,7 @@ interface ConfirmModalProps {
   title: string
   message: string
   confirmText?: string
-  confirmVariant?: 'primary' | 'danger'
+  confirmVariant?: 'primary' | 'destructive'
   loading?: boolean
 }
 

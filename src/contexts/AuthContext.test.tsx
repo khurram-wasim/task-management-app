@@ -23,13 +23,12 @@ function TestComponent() {
 describe('AuthContext', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    // Clear localStorage before each test
+    localStorage.clear()
   })
 
   it('should provide authentication context to children', async () => {
-    const { getCurrentUser, onAuthStateChange } = await import('@/lib/auth')
-    
-    // Mock no initial user
-    vi.mocked(getCurrentUser).mockResolvedValue(null)
+    const { onAuthStateChange } = await import('@/lib/auth')
     
     // Mock auth state change listener
     vi.mocked(onAuthStateChange).mockReturnValue({
@@ -46,17 +45,14 @@ describe('AuthContext', () => {
       </AuthProvider>
     )
 
-    // Should show loading initially
-    expect(screen.getByText('Loading...')).toBeInTheDocument()
-
-    // Should show not authenticated after loading
+    // Should show not authenticated when no localStorage data
     await waitFor(() => {
       expect(screen.getByText('Not authenticated')).toBeInTheDocument()
     })
   })
 
   it('should handle authenticated user', async () => {
-    const { getCurrentUser, onAuthStateChange } = await import('@/lib/auth')
+    const { onAuthStateChange } = await import('@/lib/auth')
     
     const mockUser = {
       id: '123',
@@ -64,8 +60,9 @@ describe('AuthContext', () => {
       user_metadata: {}
     }
 
-    // Mock authenticated user
-    vi.mocked(getCurrentUser).mockResolvedValue(mockUser)
+    // Set up localStorage with token and user
+    localStorage.setItem('auth_token', 'mock-token')
+    localStorage.setItem('current_user', JSON.stringify(mockUser))
     
     // Mock auth state change listener
     vi.mocked(onAuthStateChange).mockReturnValue({
@@ -82,7 +79,7 @@ describe('AuthContext', () => {
       </AuthProvider>
     )
 
-    // Should show welcome message for authenticated user
+    // Should show welcome message for authenticated user from localStorage
     await waitFor(() => {
       expect(screen.getByText('Welcome test@example.com')).toBeInTheDocument()
     })

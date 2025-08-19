@@ -240,3 +240,140 @@ export interface AddCollaboratorRequest {
   email: string
   role?: 'member' | 'admin'
 }
+
+// Enhanced Board Management Types
+export interface BoardWithStats extends Board {
+  lists_count: number
+  tasks_count: number
+  collaborators_count: number
+  last_activity?: string
+  is_owner: boolean
+  role?: 'owner' | 'admin' | 'member'
+}
+
+export interface BoardMember {
+  id: string
+  user_id: string
+  board_id: string
+  role: 'owner' | 'admin' | 'member'
+  email: string
+  name?: string
+  avatar_url?: string
+  joined_at: string
+}
+
+export interface BoardActivity {
+  id: string
+  board_id: string
+  user_id: string
+  action: 'created' | 'updated' | 'deleted' | 'moved' | 'assigned' | 'commented'
+  entity_type: 'board' | 'list' | 'task' | 'comment'
+  entity_id: string
+  entity_name: string
+  description: string
+  created_at: string
+  user: {
+    id: string
+    name?: string
+    email: string
+    avatar_url?: string
+  }
+}
+
+export interface BoardInvitation {
+  id: string
+  board_id: string
+  email: string
+  role: 'admin' | 'member'
+  invited_by: string
+  status: 'pending' | 'accepted' | 'declined' | 'expired'
+  expires_at: string
+  created_at: string
+}
+
+// Board Hook State Types
+export interface BoardsState {
+  boards: BoardWithStats[]
+  loading: boolean
+  error: string | null
+  total: number
+  hasMore: boolean
+}
+
+export interface BoardState {
+  board: BoardWithStats | null
+  members: BoardMember[]
+  activities: BoardActivity[]
+  loading: boolean
+  error: string | null
+}
+
+// Board Form Types
+export interface CreateBoardForm {
+  name: string
+  description?: string
+  template?: 'blank' | 'kanban' | 'scrum' | 'personal'
+  isPrivate?: boolean
+}
+
+export interface UpdateBoardForm {
+  name?: string
+  description?: string
+  isPrivate?: boolean
+}
+
+export interface BoardFilters {
+  search?: string
+  sortBy?: 'name' | 'created_at' | 'updated_at' | 'activity'
+  sortOrder?: 'asc' | 'desc'
+  showArchived?: boolean
+  role?: 'owner' | 'admin' | 'member'
+}
+
+// Board Permission Types
+export interface BoardPermissions {
+  canView: boolean
+  canEdit: boolean
+  canDelete: boolean
+  canInvite: boolean
+  canManageMembers: boolean
+  canArchive: boolean
+  canChangeVisibility: boolean
+}
+
+// Board Template Types
+export interface BoardTemplate {
+  id: string
+  name: string
+  description: string
+  category: 'productivity' | 'project-management' | 'personal' | 'team'
+  thumbnail?: string
+  lists: Array<{
+    name: string
+    position: number
+    tasks?: Array<{
+      title: string
+      description?: string
+      position: number
+    }>
+  }>
+}
+
+// Board Sharing Types
+export interface BoardShareSettings {
+  is_public: boolean
+  allow_comments: boolean
+  allow_voting: boolean
+  share_link?: string
+  link_expires_at?: string
+}
+
+// Export/Import Types
+export interface BoardExport {
+  board: Board
+  lists: List[]
+  tasks: Task[]
+  labels: TaskLabel[]
+  export_format: 'json' | 'csv' | 'pdf'
+  exported_at: string
+}

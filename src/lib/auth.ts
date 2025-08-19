@@ -14,36 +14,16 @@ let currentUser: AuthUser | null = null
 const setCurrentUser = (user: AuthUser | null) => {
   currentUser = user
   if (user) {
+    console.log('setCurrentUser: Saving user to localStorage')
     localStorage.setItem('current_user', JSON.stringify(user))
   } else {
+    console.log('setCurrentUser: Removing user from localStorage')
     localStorage.removeItem('current_user')
   }
   
   // Notify all listeners
   authListeners.forEach(callback => callback(user))
 }
-
-// Initialize user from localStorage on app start
-const initializeAuth = () => {
-  const token = getAuthToken()
-  if (token) {
-    const storedUser = localStorage.getItem('current_user')
-    if (storedUser) {
-      try {
-        currentUser = JSON.parse(storedUser)
-        // Setup token refresh for existing session
-        setupTokenRefresh()
-      } catch {
-        // Clear invalid stored user
-        localStorage.removeItem('current_user')
-        setAuthToken(null)
-      }
-    }
-  }
-}
-
-// Initialize on module load
-initializeAuth()
 
 // Token refresh timer
 let refreshTimer: NodeJS.Timeout | null = null
@@ -76,6 +56,41 @@ const setupTokenRefresh = () => {
     }
   }, 21600000) // 6 hours
 }
+
+// Initialize user from localStorage on app start
+const initializeAuth = () => {
+  console.log('initializeAuth: Called')
+  console.trace('initializeAuth: Call stack')
+  
+  const token = getAuthToken()
+  console.log('initializeAuth: Token check', { hasToken: !!token })
+  
+  if (token) {
+    const storedUser = localStorage.getItem('current_user')
+    console.log('initializeAuth: User check', { hasStoredUser: !!storedUser })
+    
+    if (storedUser) {
+      try {
+        currentUser = JSON.parse(storedUser)
+        console.log('initializeAuth: Successfully parsed stored user:', currentUser)
+        // Setup token refresh for existing session
+        setupTokenRefresh()
+      } catch (error) {
+        // Clear invalid stored user
+        console.error('initializeAuth: Failed to parse stored user data:', storedUser, error)
+        localStorage.removeItem('current_user')
+        setAuthToken(null)
+      }
+    } else {
+      console.log('initializeAuth: No stored user found, but token exists - this might be the problem')
+    }
+  } else {
+    console.log('initializeAuth: No token found')
+  }
+}
+
+// Initialize on module load
+initializeAuth()
 
 // API error handler for 401 responses (token expired)
 const handleApiError = (error: any) => {
@@ -111,8 +126,8 @@ export const signUp = async (email: string, password: string, fullName?: string)
     
     return { user, error: null }
   } catch (error) {
-    if (error instanceof ApiError) {
-      return { user: null, error: error.message }
+    if (error instanceof ApiError || (error as any)?.name === 'ApiError') {
+      return { user: null, error: (error as Error).message }
     }
     return { user: null, error: 'An unexpected error occurred during sign up' }
   }
@@ -123,10 +138,13 @@ export const signUp = async (email: string, password: string, fullName?: string)
  */
 export const signIn = async (email: string, password: string) => {
   try {
+    console.log('signIn: Starting login process')
     const response = await api.login({ email, password })
+    console.log('signIn: API response received:', { hasToken: !!response.token, hasUser: !!response.user })
     
     // Set authentication token
     setAuthToken(response.token)
+    console.log('signIn: Token saved to localStorage')
     
     // Convert API response to AuthUser format
     const user: AuthUser = {
@@ -138,14 +156,16 @@ export const signIn = async (email: string, password: string) => {
     }
     
     setCurrentUser(user)
+    console.log('signIn: User saved to localStorage:', user)
     
     // Setup token refresh timer
     setupTokenRefresh()
     
     return { user, error: null }
   } catch (error) {
-    if (error instanceof ApiError) {
-      return { user: null, error: error.message }
+    console.error('signIn: Login failed:', error)
+    if (error instanceof ApiError || (error as any)?.name === 'ApiError') {
+      return { user: null, error: (error as Error).message }
     }
     return { user: null, error: 'An unexpected error occurred during sign in' }
   }
@@ -156,6 +176,7 @@ export const signIn = async (email: string, password: string) => {
  */
 export const signOut = async () => {
   try {
+    console.log('signOut: Starting logout process')
     // Call logout endpoint if we have a token
     const token = getAuthToken()
     if (token) {
@@ -174,12 +195,14 @@ export const signOut = async () => {
     }
     
     // Clear local authentication state
+    console.log('signOut: Clearing localStorage')
     setAuthToken(null)
     setCurrentUser(null)
     
     return { error: null }
   } catch (error) {
     // Always clear local state, even if logout API call fails
+    console.log('signOut: Error during logout, clearing localStorage anyway')
     setAuthToken(null)
     setCurrentUser(null)
     return { error: null }
@@ -201,6 +224,19 @@ export const getCurrentUser = async (): Promise<AuthUser | null> => {
       return currentUser
     }
 
+    // Try to get user from localStorage before making API call
+    const storedUser = localStorage.getItem('current_user')
+    if (storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser)
+        setCurrentUser(parsedUser)
+        return parsedUser
+      } catch {
+        // Invalid stored user, continue to API call
+        localStorage.removeItem('current_user')
+      }
+    }
+
     // Verify token and get current user from API
     const response = await api.getCurrentUser()
     
@@ -215,10 +251,14 @@ export const getCurrentUser = async (): Promise<AuthUser | null> => {
     setCurrentUser(user)
     return user
   } catch (error) {
-    // If token is invalid, clear auth state
+    // Only clear auth state for actual authentication failures, not network errors
     if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
+      console.log('getCurrentUser: Token invalid (401/403), clearing localStorage')
       setAuthToken(null)
       setCurrentUser(null)
+    } else {
+      // For network errors or other issues, don't clear the token
+      console.log('getCurrentUser: Network/API error, keeping existing auth state:', error)
     }
     
     console.error('Error getting current user:', error)

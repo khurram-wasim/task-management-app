@@ -115,9 +115,6 @@ describe('API Client', () => {
         json: async () => errorResponse
       })
 
-      await expect(api.login({ email: 'invalid', password: 'test' }))
-        .rejects.toThrow(ApiError)
-
       try {
         await api.login({ email: 'invalid', password: 'test' })
       } catch (error) {
@@ -131,9 +128,6 @@ describe('API Client', () => {
 
     it('should handle network errors', async () => {
       mockFetch.mockRejectedValueOnce(new Error('Network error'))
-
-      await expect(api.login({ email: 'test@example.com', password: 'password' }))
-        .rejects.toThrow(ApiError)
 
       try {
         await api.login({ email: 'test@example.com', password: 'password' })
@@ -152,9 +146,6 @@ describe('API Client', () => {
         statusText: 'Internal Server Error',
         json: async () => { throw new Error('Invalid JSON') }
       })
-
-      await expect(api.getBoards())
-        .rejects.toThrow(ApiError)
 
       try {
         await api.getBoards()

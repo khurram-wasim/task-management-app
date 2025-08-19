@@ -26,15 +26,22 @@ let authToken: string | null = null
 export const setAuthToken = (token: string | null) => {
   authToken = token
   if (token) {
+    console.log('setAuthToken: Saving token to localStorage')
     localStorage.setItem('auth_token', token)
   } else {
+    console.log('setAuthToken: Removing token from localStorage')
+    console.trace('setAuthToken: Token removal stack trace')
     localStorage.removeItem('auth_token')
   }
 }
 
 export const getAuthToken = (): string | null => {
   if (authToken) return authToken
-  return localStorage.getItem('auth_token')
+  const storageToken = localStorage.getItem('auth_token')
+  if (!storageToken) {
+    console.log('getAuthToken: No token found in localStorage')
+  }
+  return storageToken
 }
 
 // API Error class

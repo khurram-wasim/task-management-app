@@ -13,42 +13,38 @@ export class BoardService {
   }
 
   // Get all boards for a user
-  async getUserBoards(userId: string, page: number = 1, limit: number = 20): Promise<ServiceResponse<{ boards: BoardWithCollaborators[]; total: number }>> {
+  async getUserBoards(userId: string, page: number = 1, limit: number = 20): Promise<ServiceResponse<{ boards: Board[]; total: number }>> {
     try {
       logger.debug('Getting user boards', { userId, page, limit })
 
       const offset = (page - 1) * limit
 
-      // Get boards where user is owner or collaborator
-      const { data, error, count } = await this.supabase
+      // Get boards where user is owner
+      // Simplified query without complex joins for now
+      const { data: ownedBoards, error: ownedError } = await this.supabase
         .from('boards')
-        .select(`
-          *,
-          board_collaborators!inner (
-            user_id,
-            role,
-            users (
-              id,
-              email,
-              full_name
-            )
-          )
-        `)
-        .or(`owner_id.eq.${userId},board_collaborators.user_id.eq.${userId}`)
+        .select('*')
+        .eq('user_id', userId)
         .range(offset, offset + limit - 1)
         .order('created_at', { ascending: false })
 
-      if (error) {
-        logger.error('Failed to fetch user boards', error as Error)
+      if (ownedError) {
+        logger.error('Failed to fetch owned boards', ownedError as Error)
         throw createDatabaseError('Failed to fetch boards')
       }
+
+      // For now, just return owned boards (simplified approach)
+      // TODO: Add collaborative boards in a future enhancement
+      const data = ownedBoards
+      const count = ownedBoards?.length || 0
+
 
       logger.info('Successfully retrieved user boards', { userId, count: data?.length || 0 })
 
       return {
         success: true,
         data: {
-          boards: (data as BoardWithCollaborators[]) || [],
+          boards: (data as Board[]) || [],
           total: count || 0
         }
       }
@@ -88,7 +84,7 @@ export class BoardService {
           )
         `)
         .eq('id', boardId)
-        .or(`owner_id.eq.${userId},board_collaborators.user_id.eq.${userId}`)
+        .or(`user_id.eq.${userId},board_collaborators.user_id.eq.${userId}`)
         .single()
 
       if (error || !data) {
@@ -118,7 +114,7 @@ export class BoardService {
         .insert({
           name: data.name,
           description: data.description || null,
-          owner_id: userId,
+          user_id: userId,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
@@ -167,20 +163,24 @@ export class BoardService {
     try {
       logger.debug('Updating board', { boardId, data, userId })
 
-      // Check if user has admin access to the board
-      const { data: collaborator } = await this.supabase
-        .from('board_collaborators')
-        .select('role')
-        .eq('board_id', boardId)
-        .eq('user_id', userId)
+      // Check if user is the owner of the board
+      const { data: existingBoard, error: boardError } = await this.supabase
+        .from('boards')
+        .select('user_id')
+        .eq('id', boardId)
         .single()
 
-      if (!collaborator || collaborator.role !== 'admin') {
-        logger.warn('User does not have admin access to board', { boardId, userId })
+      if (boardError || !existingBoard) {
+        logger.warn('Board not found', { boardId, userId })
         throw createNotFoundError('Board')
       }
 
-      const { data: board, error } = await this.supabase
+      if (existingBoard.user_id !== userId) {
+        logger.warn('User does not have permission to update this board', { boardId, userId, ownerId: existingBoard.user_id })
+        throw createNotFoundError('Board')
+      }
+
+      const { data: updatedBoard, error } = await this.supabase
         .from('boards')
         .update({
           ...data,
@@ -190,7 +190,7 @@ export class BoardService {
         .select()
         .single()
 
-      if (error || !board) {
+      if (error || !updatedBoard) {
         logger.error('Failed to update board', (error as Error) || new Error('Unknown error'))
         throw createDatabaseError('Failed to update board')
       }
@@ -199,7 +199,7 @@ export class BoardService {
 
       return {
         success: true,
-        data: board as Board
+        data: updatedBoard as Board
       }
     } catch (error) {
       logger.error('Error in updateBoard', error as Error)
@@ -215,11 +215,11 @@ export class BoardService {
       // Check if user is the owner
       const { data: board } = await this.supabase
         .from('boards')
-        .select('owner_id')
+        .select('user_id')
         .eq('id', boardId)
         .single()
 
-      if (!board || board.owner_id !== userId) {
+      if (!board || board.user_id !== userId) {
         logger.warn('User is not the owner of the board', { boardId, userId })
         throw createNotFoundError('Board')
       }
@@ -251,17 +251,33 @@ export class BoardService {
     try {
       logger.debug('Adding collaborator to board', { boardId, email, role, requestUserId })
 
-      // Check if requesting user has admin access
-      const { data: requesterAccess } = await this.supabase
-        .from('board_collaborators')
-        .select('role')
-        .eq('board_id', boardId)
-        .eq('user_id', requestUserId)
+      // Check if requesting user is board owner or has admin access
+      const { data: board } = await this.supabase
+        .from('boards')
+        .select('user_id')
+        .eq('id', boardId)
         .single()
 
-      if (!requesterAccess || requesterAccess.role !== 'admin') {
-        logger.warn('User does not have admin access to add collaborators', { boardId, requestUserId })
+      if (!board) {
+        logger.warn('Board not found', { boardId })
         throw createNotFoundError('Board')
+      }
+
+      const isOwner = board.user_id === requestUserId
+
+      if (!isOwner) {
+        // Check if user has admin role
+        const { data: requesterAccess } = await this.supabase
+          .from('board_collaborators')
+          .select('role')
+          .eq('board_id', boardId)
+          .eq('user_id', requestUserId)
+          .single()
+
+        if (!requesterAccess || requesterAccess.role !== 'admin') {
+          logger.warn('User does not have admin access to add collaborators', { boardId, requestUserId })
+          throw createNotFoundError('Board')
+        }
       }
 
       // Find user by email
@@ -327,11 +343,11 @@ export class BoardService {
       // Don't allow removing the board owner
       const { data: board } = await this.supabase
         .from('boards')
-        .select('owner_id')
+        .select('user_id')
         .eq('id', boardId)
         .single()
 
-      if (board && board.owner_id === userId) {
+      if (board && board.user_id === userId) {
         throw createConflictError('Cannot remove board owner')
       }
 

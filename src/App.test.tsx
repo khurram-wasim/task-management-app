@@ -1,15 +1,48 @@
-import { render, screen } from '@testing-library/react'
-import { describe, it, expect } from 'vitest'
+import { render, screen, waitFor } from '@testing-library/react'
+import { describe, it, expect, vi } from 'vitest'
 import App from './App'
 
+// Mock the auth module
+vi.mock('@/lib/auth', () => ({
+  getCurrentUser: vi.fn().mockResolvedValue(null),
+  onAuthStateChange: vi.fn().mockReturnValue({
+    data: {
+      subscription: {
+        unsubscribe: vi.fn()
+      }
+    }
+  }),
+  signIn: vi.fn(),
+  signUp: vi.fn(),
+  signOut: vi.fn(),
+}))
+
+// Mock localStorage
+Object.defineProperty(window, 'localStorage', {
+  value: {
+    getItem: vi.fn().mockReturnValue(null),
+    setItem: vi.fn(),
+    removeItem: vi.fn(),
+    clear: vi.fn()
+  }
+})
+
 describe('App', () => {
-  it('renders Vite + React heading', () => {
+  it('renders login page when not authenticated', async () => {
     render(<App />)
-    expect(screen.getByRole('heading', { name: /vite \+ react/i })).toBeInTheDocument()
+    
+    // Should redirect to login and show login form
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /welcome back/i })).toBeInTheDocument()
+    })
   })
 
-  it('renders count button', () => {
+  it('renders sign in button', async () => {
     render(<App />)
-    expect(screen.getByRole('button', { name: /count is 0/i })).toBeInTheDocument()
+    
+    // Should show the sign in button on login page
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument()
+    })
   })
 })

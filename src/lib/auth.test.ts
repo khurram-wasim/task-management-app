@@ -1,53 +1,75 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { signUp, signIn, signOut, getCurrentUser } from './auth'
-import { supabase } from './supabase'
+import { api, ApiError } from './api'
 
-// Mock the supabase client
-vi.mock('./supabase', () => ({
-  supabase: {
-    auth: {
-      signUp: vi.fn(),
-      signInWithPassword: vi.fn(),
-      signOut: vi.fn(),
-      getUser: vi.fn(),
-      onAuthStateChange: vi.fn(),
-      resetPasswordForEmail: vi.fn(),
-      updateUser: vi.fn(),
-    }
-  }
+// Mock the API client
+vi.mock('./api', () => ({
+  api: {
+    register: vi.fn(),
+    login: vi.fn(),
+    logout: vi.fn(),
+    getCurrentUser: vi.fn(),
+  },
+  setAuthToken: vi.fn(),
+  getAuthToken: vi.fn(),
+  ApiError: vi.fn().mockImplementation((message: string, status: number) => {
+    const error = new Error(message)
+    error.name = 'ApiError'
+    ;(error as any).status = status
+    return error
+  })
 }))
 
-const mockSupabase = supabase as any
+// Mock localStorage
+const mockLocalStorage = {
+  getItem: vi.fn(),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn()
+}
+
+Object.defineProperty(window, 'localStorage', {
+  value: mockLocalStorage
+})
+
+const mockApi = api as any
+const mockSetAuthToken = vi.mocked(await import('./api')).setAuthToken as any
+const mockGetAuthToken = vi.mocked(await import('./api')).getAuthToken as any
 
 describe('auth', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockLocalStorage.clear()
   })
 
   describe('signUp', () => {
     it('should sign up user successfully', async () => {
-      const mockUser = { id: '123', email: 'test@example.com' }
-      mockSupabase.auth.signUp.mockResolvedValue({
-        data: { user: mockUser },
-        error: null
-      })
+      const mockResponse = {
+        user: { id: '123', email: 'test@example.com', fullName: 'Test User' },
+        token: 'mock-token'
+      }
+      mockApi.register.mockResolvedValue(mockResponse)
 
-      const result = await signUp('test@example.com', 'password123')
+      const result = await signUp('test@example.com', 'password123', 'Test User')
 
-      expect(result.user).toEqual(mockUser)
-      expect(result.error).toBeNull()
-      expect(mockSupabase.auth.signUp).toHaveBeenCalledWith({
+      expect(result.user).toEqual({
+        id: '123',
         email: 'test@example.com',
-        password: 'password123'
+        user_metadata: { full_name: 'Test User' }
+      })
+      expect(result.error).toBeNull()
+      expect(mockApi.register).toHaveBeenCalledWith({
+        email: 'test@example.com',
+        password: 'password123',
+        fullName: 'Test User'
       })
     })
 
     it('should handle sign up error', async () => {
-      const mockError = { message: 'Email already registered' }
-      mockSupabase.auth.signUp.mockResolvedValue({
-        data: { user: null },
-        error: mockError
-      })
+      const mockError = new Error('Email already registered')
+      mockError.name = 'ApiError'
+      ;(mockError as any).status = 422
+      mockApi.register.mockRejectedValue(mockError)
 
       const result = await signUp('test@example.com', 'password123')
 
@@ -56,7 +78,7 @@ describe('auth', () => {
     })
 
     it('should handle unexpected errors', async () => {
-      mockSupabase.auth.signUp.mockRejectedValue(new Error('Network error'))
+      mockApi.register.mockRejectedValue(new Error('Network error'))
 
       const result = await signUp('test@example.com', 'password123')
 
@@ -67,28 +89,31 @@ describe('auth', () => {
 
   describe('signIn', () => {
     it('should sign in user successfully', async () => {
-      const mockUser = { id: '123', email: 'test@example.com' }
-      mockSupabase.auth.signInWithPassword.mockResolvedValue({
-        data: { user: mockUser },
-        error: null
-      })
+      const mockResponse = {
+        user: { id: '123', email: 'test@example.com', fullName: 'Test User' },
+        token: 'mock-token'
+      }
+      mockApi.login.mockResolvedValue(mockResponse)
 
       const result = await signIn('test@example.com', 'password123')
 
-      expect(result.user).toEqual(mockUser)
+      expect(result.user).toEqual({
+        id: '123',
+        email: 'test@example.com',
+        user_metadata: { full_name: 'Test User' }
+      })
       expect(result.error).toBeNull()
-      expect(mockSupabase.auth.signInWithPassword).toHaveBeenCalledWith({
+      expect(mockApi.login).toHaveBeenCalledWith({
         email: 'test@example.com',
         password: 'password123'
       })
     })
 
     it('should handle sign in error', async () => {
-      const mockError = { message: 'Invalid credentials' }
-      mockSupabase.auth.signInWithPassword.mockResolvedValue({
-        data: { user: null },
-        error: mockError
-      })
+      const mockError = new Error('Invalid credentials')
+      mockError.name = 'ApiError'
+      ;(mockError as any).status = 401
+      mockApi.login.mockRejectedValue(mockError)
 
       const result = await signIn('test@example.com', 'wrongpassword')
 
@@ -99,34 +124,32 @@ describe('auth', () => {
 
   describe('signOut', () => {
     it('should sign out successfully', async () => {
-      mockSupabase.auth.signOut.mockResolvedValue({ error: null })
+      mockGetAuthToken.mockReturnValue('mock-token')
+      mockApi.logout.mockResolvedValue(undefined)
 
       const result = await signOut()
 
       expect(result.error).toBeNull()
-      expect(mockSupabase.auth.signOut).toHaveBeenCalled()
+      expect(mockApi.logout).toHaveBeenCalled()
     })
 
     it('should handle sign out error', async () => {
-      const mockError = { message: 'Sign out failed' }
-      mockSupabase.auth.signOut.mockResolvedValue({ error: mockError })
+      mockLocalStorage.getItem.mockReturnValue('mock-token')
+      mockApi.logout.mockRejectedValue(new Error('Logout failed'))
 
       const result = await signOut()
 
-      expect(result.error).toBe('Sign out failed')
+      // Should always return success for logout (clears local state regardless)
+      expect(result.error).toBeNull()
     })
   })
 
   describe('getCurrentUser', () => {
     it('should get current user successfully', async () => {
-      const mockUser = { 
-        id: '123', 
-        email: 'test@example.com',
-        user_metadata: { full_name: 'Test User' }
-      }
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: mockUser }
-      })
+      const mockUser = { id: '123', email: 'test@example.com', fullName: 'Test User' }
+      mockGetAuthToken.mockReturnValue('mock-token')
+      mockLocalStorage.getItem.mockReturnValue(JSON.stringify({ id: '123', email: 'test@example.com', user_metadata: { full_name: 'Test User' } }))
+      mockApi.getCurrentUser.mockResolvedValue(mockUser)
 
       const result = await getCurrentUser()
 
@@ -138,9 +161,8 @@ describe('auth', () => {
     })
 
     it('should return null when no user', async () => {
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: null }
-      })
+      mockGetAuthToken.mockReturnValue(null)
+      mockLocalStorage.getItem.mockReturnValue(null)
 
       const result = await getCurrentUser()
 
@@ -148,7 +170,12 @@ describe('auth', () => {
     })
 
     it('should handle errors gracefully', async () => {
-      mockSupabase.auth.getUser.mockRejectedValue(new Error('Network error'))
+      mockGetAuthToken.mockReturnValue(null)
+      mockLocalStorage.getItem.mockReturnValue(null)
+      const mockError = new Error('Unauthorized')
+      mockError.name = 'ApiError'
+      ;(mockError as any).status = 401
+      mockApi.getCurrentUser.mockRejectedValue(mockError)
 
       const result = await getCurrentUser()
 

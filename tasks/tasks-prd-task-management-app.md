@@ -84,6 +84,12 @@ Generated from: `prd-task-management-app.md`
 - `supabase/migrations/001_initial_schema.sql` - Initial database schema migration
 - `supabase/migrations/002_rls_policies.sql` - Row Level Security policies migration
 - `supabase/seed.sql` - Sample data for development and testing
+- `src/components/board/CreateBoardModal.tsx` - Modal component for creating new boards ✓
+- `src/components/board/EditBoardModal.tsx` - Modal component for editing existing boards ✓
+- `src/components/board/ShareBoardModal.tsx` - Modal component for sharing boards with collaborators ✓
+- `src/components/ui/Input.tsx` - Reusable input component with error handling ✓
+- `server/src/services/board.service.ts` - Backend board service with CRUD operations and collaborator management ✓
+- `server/src/routes/board.routes.ts` - Backend board API routes with validation and auth ✓
 
 ### Notes
 
@@ -153,16 +159,16 @@ Generated from: `prd-task-management-app.md`
   - [x] 4.6 Create loading and error state components
   - [x] 4.7 Set up responsive design foundations for desktop-first approach
 
-- [ ] 5.0 Board Management Features
-  - [ ] 5.1 Create TypeScript types for Board entity and related operations
-  - [ ] 5.2 Implement useBoard custom hook for board CRUD operations (leveraging MCP for database operations)
-  - [ ] 5.3 Build BoardCard component for displaying individual boards
-  - [ ] 5.4 Create BoardList component for displaying all user boards
-  - [ ] 5.5 Implement Dashboard page with board creation and management
-  - [ ] 5.6 Add board creation modal with name and description fields
-  - [ ] 5.7 Implement board editing functionality (rename, update description)
-  - [ ] 5.8 Add board deletion with confirmation dialog
-  - [ ] 5.9 Implement basic board sharing functionality (invite collaborators)
+- [x] 5.0 Board Management Features
+  - [x] 5.1 Create TypeScript types for Board entity and related operations
+  - [x] 5.2 Implement useBoard custom hook for board CRUD operations (leveraging MCP for database operations)
+  - [x] 5.3 Build BoardCard component for displaying individual boards
+  - [x] 5.4 Create BoardList component for displaying all user boards
+  - [x] 5.5 Implement Dashboard page with board creation and management
+  - [x] 5.6 Add board creation modal with name and description fields
+  - [x] 5.7 Implement board editing functionality (rename, update description)
+  - [x] 5.8 Add board deletion with confirmation dialog
+  - [x] 5.9 Implement basic board sharing functionality (invite collaborators)
 
 - [ ] 6.0 List and Task Management with Drag & Drop
   - [ ] 6.1 Create TypeScript types for List and Task entities

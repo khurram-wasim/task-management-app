@@ -22,8 +22,8 @@ interface FormErrors {
 export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
   const { signIn, loading } = useAuth()
   const [formData, setFormData] = useState<FormData>({
-    email: '',
-    password: ''
+    email: 'khurram0403@gmail.com',
+    password: 'Pass@word1'
   })
   const [errors, setErrors] = useState<FormErrors>({})
 
