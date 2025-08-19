@@ -1,51 +1,39 @@
-import { useIsAuthenticated } from '@/hooks/useAuth'
-import type { ComponentWithChildren } from '@/types'
+import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '@/hooks/useAuth'
 
-interface ProtectedRouteProps extends ComponentWithChildren {
-  fallback?: React.ReactNode
+interface ProtectedRouteProps {
+  children: React.ReactNode
 }
 
 /**
  * Component that protects routes requiring authentication
- * Renders children if user is authenticated, otherwise renders fallback
+ * Redirects to login if user is not authenticated
  */
-export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
-  const { isAuthenticated, loading } = useIsAuthenticated()
+export function ProtectedRoute({ children }: ProtectedRouteProps) {
+  const { user, loading } = useAuth()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/login', { replace: true })
+    }
+  }, [user, loading, navigate])
 
   // Show loading state while checking authentication
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     )
   }
 
-  // Show children if authenticated, otherwise show fallback
-  if (isAuthenticated) {
-    return <>{children}</>
+  // If no user, return null (redirect will happen via useEffect)
+  if (!user) {
+    return null
   }
 
-  return (
-    <>
-      {fallback || (
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              Authentication Required
-            </h2>
-            <p className="text-gray-600 mb-6">
-              Please sign in to access this page.
-            </p>
-            <button 
-              onClick={() => window.location.href = '/login'}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-            >
-              Sign In
-            </button>
-          </div>
-        </div>
-      )}
-    </>
-  )
+  // User is authenticated, render the protected content
+  return <>{children}</>
 }

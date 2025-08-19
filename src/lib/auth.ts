@@ -31,6 +31,8 @@ const initializeAuth = () => {
     if (storedUser) {
       try {
         currentUser = JSON.parse(storedUser)
+        // Setup token refresh for existing session
+        setupTokenRefresh()
       } catch {
         // Clear invalid stored user
         localStorage.removeItem('current_user')
@@ -42,6 +44,46 @@ const initializeAuth = () => {
 
 // Initialize on module load
 initializeAuth()
+
+// Token refresh timer
+let refreshTimer: NodeJS.Timeout | null = null
+
+// Setup automatic token refresh
+const setupTokenRefresh = () => {
+  // Clear existing timer
+  if (refreshTimer) {
+    clearTimeout(refreshTimer)
+  }
+
+  const token = getAuthToken()
+  if (!token) return
+
+  // Try to refresh token every 6 hours (21600000 ms)
+  // In a real app, you'd decode the JWT to check expiry
+  refreshTimer = setTimeout(async () => {
+    try {
+      const user = await getCurrentUser()
+      if (!user) {
+        // Token is invalid, sign out
+        await signOut()
+      } else {
+        // Setup next refresh
+        setupTokenRefresh()
+      }
+    } catch (error) {
+      console.warn('Token refresh failed:', error)
+      await signOut()
+    }
+  }, 21600000) // 6 hours
+}
+
+// API error handler for 401 responses (token expired)
+const handleApiError = (error: any) => {
+  if (error instanceof ApiError && error.status === 401) {
+    // Token expired, automatically sign out
+    signOut()
+  }
+}
 
 /**
  * Sign up a new user with email and password
@@ -63,6 +105,9 @@ export const signUp = async (email: string, password: string, fullName?: string)
     }
     
     setCurrentUser(user)
+    
+    // Setup token refresh timer
+    setupTokenRefresh()
     
     return { user, error: null }
   } catch (error) {
@@ -94,6 +139,9 @@ export const signIn = async (email: string, password: string) => {
     
     setCurrentUser(user)
     
+    // Setup token refresh timer
+    setupTokenRefresh()
+    
     return { user, error: null }
   } catch (error) {
     if (error instanceof ApiError) {
@@ -117,6 +165,12 @@ export const signOut = async () => {
         // Continue with logout even if API call fails
         console.warn('Failed to call logout endpoint:', error)
       }
+    }
+    
+    // Clear refresh timer
+    if (refreshTimer) {
+      clearTimeout(refreshTimer)
+      refreshTimer = null
     }
     
     // Clear local authentication state
