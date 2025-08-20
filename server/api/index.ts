@@ -1,67 +1,20 @@
 import express from 'express'
 import cors from 'cors'
-import helmet from 'helmet'
-import compression from 'compression'
-import rateLimit from 'express-rate-limit'
-import { env, CONFIG, initializeDatabase } from '../src/config'
-import { setupSwagger } from '../src/config/swagger'
-import { logger, requestLogger } from '../src/utils'
-import { errorHandler, notFoundHandler, timeoutHandler, rateLimitHandler } from '../src/middleware/errorHandler'
-import { requestId, httpsRedirect, validateContentType } from '../src/middleware/security'
-import apiRoutes from '../src/routes'
+import { VercelRequest, VercelResponse } from '@vercel/node'
 
 const app = express()
 
-// Request ID and HTTPS redirect (security)
-app.use(requestId)
-app.use(httpsRedirect)
-
-// Request timeout middleware
-app.use(timeoutHandler(CONFIG.REQUEST_TIMEOUT || 30000))
-
-// Security middleware
-app.use(helmet({
-  crossOriginEmbedderPolicy: false,
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"],
-    },
-  },
-}))
-
-// Request logging middleware
-app.use(requestLogger())
-
-// CORS configuration
+// Basic CORS configuration
 app.use(cors({
-  origin: env.FRONTEND_URL,
+  origin: process.env.FRONTEND_URL || '*',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  maxAge: CONFIG.CORS_MAX_AGE,
 }))
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: CONFIG.RATE_LIMIT_WINDOW,
-  max: CONFIG.RATE_LIMIT_MAX_REQUESTS,
-  message: 'Too many requests from this IP, please try again later.',
-  standardHeaders: true,
-  legacyHeaders: false,
-  handler: rateLimitHandler,
-})
-app.use(limiter)
-
 // Body parsing middleware
-app.use(compression())
-app.use(express.json({ limit: CONFIG.MAX_REQUEST_SIZE }))
-app.use(express.urlencoded({ extended: true, limit: CONFIG.MAX_REQUEST_SIZE }))
-
-// Content type validation for API routes (excluding GET requests)
-app.use('/api/*', validateContentType(['application/json']))
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
 
 // Health check endpoint
 app.get('/health', (_req, res) => {
@@ -69,44 +22,48 @@ app.get('/health', (_req, res) => {
     status: 'OK', 
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    environment: env.NODE_ENV
+    environment: process.env.NODE_ENV || 'production',
+    message: 'Backend API is running'
   })
 })
 
-// Setup API documentation
-setupSwagger(app)
+// Basic API routes placeholder
+app.get('/api/health', (_req, res) => {
+  res.status(200).json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    message: 'API endpoint is working'
+  })
+})
 
-// Mount API routes
-app.use('/api', apiRoutes)
+// Temporary auth endpoint for testing
+app.post('/api/auth/login', (req, res) => {
+  res.status(501).json({ 
+    error: 'Authentication not yet configured',
+    message: 'Please set up environment variables',
+    timestamp: new Date().toISOString()
+  })
+})
 
-// 404 handler for undefined routes (must come before global error handler)
-app.use('*', notFoundHandler)
+// 404 handler
+app.use('*', (req, res) => {
+  res.status(404).json({ 
+    error: 'Not Found',
+    path: req.originalUrl,
+    message: 'The requested endpoint does not exist'
+  })
+})
 
-// Global error handler (must be last middleware)
-app.use(errorHandler)
-
-// Initialize database on cold start
-let dbInitialized = false
-async function ensureDbInit() {
-  if (!dbInitialized) {
-    try {
-      await initializeDatabase()
-      dbInitialized = true
-      logger.info('Database initialized for serverless function')
-    } catch (error) {
-      logger.error('Failed to initialize database', error instanceof Error ? error : new Error(String(error)))
-      throw error
-    }
-  }
-}
+// Error handler
+app.use((error: any, req: any, res: any, next: any) => {
+  console.error('API Error:', error)
+  res.status(500).json({ 
+    error: 'Internal Server Error',
+    message: error.message || 'Something went wrong'
+  })
+})
 
 // Vercel serverless function handler
-export default async (req: any, res: any) => {
-  try {
-    await ensureDbInit()
-    return app(req, res)
-  } catch (error) {
-    logger.error('Serverless function error', error instanceof Error ? error : new Error(String(error)))
-    return res.status(500).json({ error: 'Internal server error' })
-  }
+export default (req: VercelRequest, res: VercelResponse) => {
+  return app(req, res)
 }
