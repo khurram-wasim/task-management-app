@@ -44,7 +44,8 @@
       "mcp__vercel__list_projects",
       "mcp__vercel__web_fetch_vercel_url",
       "mcp__vercel__list_deployments",
-      "WebFetch(domain:server-oittpfun0-khurrams-projects-27176591.vercel.app)"
+      "WebFetch(domain:server-oittpfun0-khurrams-projects-27176591.vercel.app)",
+      "mcp__vercel__get_deployment_events"
     ],
     "deny": [],
     "ask": []
