@@ -93,12 +93,12 @@ const initializeAuth = () => {
 initializeAuth()
 
 // API error handler for 401 responses (token expired)
-const handleApiError = (error: any) => {
-  if (error instanceof ApiError && error.status === 401) {
-    // Token expired, automatically sign out
-    signOut()
-  }
-}
+// const handleApiError = (error: any) => {
+//   if (error instanceof ApiError && error.status === 401) {
+//     // Token expired, automatically sign out
+//     signOut()
+//   }
+// }
 
 /**
  * Sign up a new user with email and password

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { signUp, signIn, signOut, getCurrentUser } from './auth'
-import { api, ApiError } from './api'
+import { api } from './api'
 
 // Mock the API client
 vi.mock('./api', () => ({
@@ -33,7 +33,7 @@ Object.defineProperty(window, 'localStorage', {
 })
 
 const mockApi = api as any
-const mockSetAuthToken = vi.mocked(await import('./api')).setAuthToken as any
+// const mockSetAuthToken = vi.mocked(await import('./api')).setAuthToken as any
 const mockGetAuthToken = vi.mocked(await import('./api')).getAuthToken as any
 
 describe('auth', () => {

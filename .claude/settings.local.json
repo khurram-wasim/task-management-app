@@ -29,7 +29,11 @@
       "Bash(nslookup:*)",
       "Bash(node:*)",
       "Bash(sudo dscacheutil:*)",
-      "Bash(sudo killall:*)"
+      "Bash(sudo killall:*)",
+      "Bash(find:*)",
+      "Bash(npx vercel:*)",
+      "Bash(pkill:*)",
+      "Bash(git config:*)"
     ],
     "deny": [],
     "ask": []

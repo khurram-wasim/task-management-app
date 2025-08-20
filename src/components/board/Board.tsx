@@ -23,7 +23,7 @@ import { Input } from '@/components/ui/Input'
 import { List } from '@/components/list'
 import { Task } from '@/components/task'
 import { useLists } from '@/hooks/useLists'
-import { useTasks } from '@/hooks/useTasks'
+// import { useTasks } from '@/hooks/useTasks'
 import type { Board as BoardType, Task as TaskType } from '@/types'
 import { cn } from '@/utils/classNames'
 
@@ -44,7 +44,7 @@ export function Board({ board, className }: BoardProps) {
     loading: listsLoading,
     error: listsError,
     createList,
-    updateList
+    // updateList
   } = useLists(board.id)
 
   // For moving tasks between lists, we'll use API directly since we need cross-list operations

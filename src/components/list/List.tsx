@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/Input'
 import { Task, TaskModal } from '@/components/task'
 import { useTasks } from '@/hooks/useTasks'
 import { useLists } from '@/hooks/useLists'
-import type { List as ListType, Task as TaskType } from '@/types'
+import type { List as ListType } from '@/types'
 import { cn } from '@/utils/classNames'
 
 interface ListProps {
@@ -248,11 +248,11 @@ export function List({ list, boardId, className }: ListProps) {
         taskId={selectedTaskId}
         isOpen={!!selectedTaskId}
         onClose={() => setSelectedTaskId(null)}
-        onTaskUpdated={(updatedTask) => {
+        onTaskUpdated={() => {
           // The useTasks hook should automatically refresh
           // when a task is updated via the API
         }}
-        onTaskDeleted={(taskId) => {
+        onTaskDeleted={() => {
           setSelectedTaskId(null)
           // The deleteTask function would need to be called here
           // For now, the task will be removed when the list refreshes

@@ -58,11 +58,12 @@ export function EditBoardModal({
   const validateForm = (): boolean => {
     const newErrors: Partial<UpdateBoardForm> = {}
 
-    if (!formData.name.trim()) {
+    const name = formData.name || ''
+    if (!name.trim()) {
       newErrors.name = 'Board name is required'
-    } else if (formData.name.trim().length < 2) {
+    } else if (name.trim().length < 2) {
       newErrors.name = 'Board name must be at least 2 characters'
-    } else if (formData.name.trim().length > 100) {
+    } else if (name.trim().length > 100) {
       newErrors.name = 'Board name must be less than 100 characters'
     }
 
@@ -82,8 +83,8 @@ export function EditBoardModal({
     setIsSubmitting(true)
     try {
       const result = await onSubmit(board.id, {
-        name: formData.name.trim(),
-        description: formData.description.trim() || undefined
+        name: (formData.name || '').trim(),
+        description: (formData.description || '').trim() || undefined
       })
 
       if (result.success) {
@@ -100,7 +101,7 @@ export function EditBoardModal({
   }
 
   const isFormChanged = board && (
-    formData.name.trim() !== board.name ||
+    (formData.name || '').trim() !== board.name ||
     (formData.description || '').trim() !== (board.description || '')
   )
 
@@ -153,7 +154,7 @@ export function EditBoardModal({
               <p className="mt-1 text-sm text-red-600">{errors.description}</p>
             )}
             <p className="mt-1 text-xs text-gray-500">
-              {formData.description.length}/500 characters
+              {(formData.description || '').length}/500 characters
             </p>
           </div>
         </div>
@@ -169,7 +170,7 @@ export function EditBoardModal({
           </Button>
           <Button
             type="submit"
-            disabled={isSubmitting || loading || !formData.name.trim() || !isFormChanged}
+            disabled={isSubmitting || loading || !(formData.name || '').trim() || !isFormChanged}
             loading={isSubmitting}
           >
             {isSubmitting ? 'Updating...' : 'Update Board'}

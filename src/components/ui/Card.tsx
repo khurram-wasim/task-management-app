@@ -1,4 +1,4 @@
-import { ReactNode, forwardRef } from 'react'
+import { type ReactNode, forwardRef } from 'react'
 import { cn } from '@/utils/classNames'
 
 interface CardProps {

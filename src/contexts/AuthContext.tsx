@@ -78,9 +78,9 @@ export function AuthProvider({ children }: ComponentWithChildren) {
     return { error }
   }
 
-  const handleSignUp = async (email: string, password: string) => {
+  const handleSignUp = async (email: string, password: string, fullName?: string) => {
     setLoading(true)
-    const { user, error } = await signUp(email, password)
+    const { user, error } = await signUp(email, password, fullName)
     
     if (user) {
       setUser({
