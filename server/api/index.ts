@@ -4,9 +4,17 @@ import { VercelRequest, VercelResponse } from '@vercel/node'
 
 const app = express()
 
-// Basic CORS configuration
+// CORS configuration for production
+const allowedOrigins = [
+  'https://react-app-ochre-nine.vercel.app',
+  'https://react-cnxacywzw-khurrams-projects-27176591.vercel.app', 
+  'https://task-management-app-ktne.vercel.app',
+  'http://localhost:5173', // For local development
+  process.env.FRONTEND_URL
+].filter(Boolean)
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || '*',
+  origin: allowedOrigins,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
