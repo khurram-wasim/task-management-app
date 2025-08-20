@@ -33,7 +33,18 @@
       "Bash(find:*)",
       "Bash(npx vercel:*)",
       "Bash(pkill:*)",
-      "Bash(git config:*)"
+      "Bash(git config:*)",
+      "Bash(git commit:*)",
+      "Bash(git remote add:*)",
+      "Bash(git push:*)",
+      "Bash(git remote set-url:*)",
+      "Bash(gh auth:*)",
+      "Bash(brew install:*)",
+      "mcp__vercel__list_teams",
+      "mcp__vercel__list_projects",
+      "mcp__vercel__web_fetch_vercel_url",
+      "mcp__vercel__list_deployments",
+      "WebFetch(domain:server-oittpfun0-khurrams-projects-27176591.vercel.app)"
     ],
     "deny": [],
     "ask": []
