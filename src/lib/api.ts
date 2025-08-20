@@ -19,7 +19,7 @@ import type {
 
 // API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.PROD ? 'https://server-eibziscdb-khurrams-projects-27176591.vercel.app/api' : 'http://localhost:3001/api')
+  (import.meta.env.PROD ? 'https://server-qyey5itt7-khurrams-projects-27176591.vercel.app/api' : 'http://localhost:3001/api')
 
 // Debug logging for environment
 console.log('API Configuration:', {

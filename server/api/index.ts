@@ -4,17 +4,33 @@ import { VercelRequest, VercelResponse } from '@vercel/node'
 
 const app = express()
 
-// CORS configuration for production
-const allowedOrigins = [
-  'https://react-app-ochre-nine.vercel.app',
-  'https://react-cnxacywzw-khurrams-projects-27176591.vercel.app', 
-  'https://task-management-app-ktne.vercel.app',
-  'http://localhost:5173', // For local development
-  process.env.FRONTEND_URL
-].filter(Boolean)
-
+// CORS configuration for production - allow all Vercel deployments
 app.use(cors({
-  origin: allowedOrigins,
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true)
+    
+    // Allow localhost for development
+    if (origin.startsWith('http://localhost')) {
+      return callback(null, true)
+    }
+    
+    // Allow all Vercel deployments for this project
+    if (origin.includes('vercel.app') && 
+        (origin.includes('react-') || 
+         origin.includes('task-management') || 
+         origin.includes('khurrams-projects'))) {
+      return callback(null, true)
+    }
+    
+    // Allow specific frontend URL if set
+    if (process.env.FRONTEND_URL && origin === process.env.FRONTEND_URL) {
+      return callback(null, true)
+    }
+    
+    // Reject other origins
+    callback(new Error('Not allowed by CORS'))
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],

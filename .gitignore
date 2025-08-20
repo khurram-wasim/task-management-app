@@ -36,3 +36,4 @@ coverage
 # Supabase
 .branches
 .temp
+.vercel
