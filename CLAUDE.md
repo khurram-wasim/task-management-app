@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a full-stack Task Management Application (Trello clone) built with React + TypeScript frontend, Node.js + Express backend, and Supabase as the database. The project is in active development with authentication, core data models, and testing infrastructure already implemented.
+This is a full-stack Task Management Application (Trello clone) built with React + TypeScript frontend, Node.js + Express backend, and Supabase as the database. The project supports both local development and Vercel deployment with separate build configurations for frontend and backend.
 
 ## Development Commands
 
@@ -70,11 +70,13 @@ The application uses a **client-server architecture** with:
 
 ### Backend Stack  
 - **Node.js 18+** with **Express.js** framework
-- **TypeScript** with strict configuration
+- **TypeScript** with strict configuration and **tsx** for development
 - **Supabase client** for database operations
 - **JWT + bcrypt** for authentication
 - **Helmet + CORS + Rate limiting** for security
 - **WebSockets (ws)** for real-time features
+- **Joi** for request validation
+- **Swagger** for API documentation
 
 ### Database Design
 Supabase PostgreSQL schema with these core entities:
@@ -106,7 +108,9 @@ Available path aliases:
 - `@/utils/*` → `src/utils/*`
 - `@/types/*` → `src/types/*`
 - `@/lib/*` → `src/lib/*`
+- `@/services/*` → `src/services/*`
 - `@/contexts/*` → `src/contexts/*`
+- `@/constants/*` → `src/constants/*`
 
 ## Authentication Architecture
 
@@ -150,8 +154,13 @@ Real-time collaboration uses **Supabase Realtime**:
 ### Initial Setup
 1. `npm install` in root (frontend dependencies)
 2. `cd server && npm install` (backend dependencies) 
-3. Set up `.env.local` with Supabase credentials
+3. Set up `.env.local` with Supabase credentials (use `.env.example` as template)
 4. Set up `server/.env` with backend environment variables
+
+### Deployment
+- **Frontend**: Deployed to Vercel with SPA routing configuration
+- **Backend**: Deployed as Vercel serverless functions via `server/api/index.ts`
+- **Configuration**: Frontend uses `vercel.json` for SPA routing, backend uses separate Vercel config
 
 ### Working with the Codebase
 1. **Use TypeScript types** - All entities are strongly typed in `src/types/index.ts`
@@ -166,6 +175,19 @@ Real-time collaboration uses **Supabase Realtime**:
 - **Vitest** for fast unit and integration testing
 - **Co-location** - Keep tests next to the code they test
 
+## Deployment Architecture
+
+### Vercel Configuration
+- **Frontend**: Single-page application with client-side routing
+- **Backend**: Serverless functions with Express.js handler in `server/api/index.ts`
+- **Database**: Supabase hosted PostgreSQL with real-time subscriptions
+- **Environment**: Separate configurations for development and production
+
+### Development vs Production
+- **Local Development**: Frontend (`npm run dev`) + Backend (`cd server && npm run dev`)
+- **Production**: Both deployed to Vercel with separate build processes
+- **API Routes**: Backend accessible via `/api/*` routes in production
+
 ## Current Implementation Status
 
 **Completed:**
@@ -177,6 +199,7 @@ Real-time collaboration uses **Supabase Realtime**:
 - ✅ Real-time utilities and hooks
 - ✅ Basic utility functions and helpers
 - ✅ Backend API architecture with auth routes
+- ✅ Vercel deployment configuration for both frontend and backend
 
 **In Progress:**
 - 🚧 Backend API routes (boards completed, lists/tasks pending)

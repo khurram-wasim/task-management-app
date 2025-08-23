@@ -1,9 +1,12 @@
-import { useParams, Navigate } from 'react-router-dom'
+import { useParams, Navigate, Link } from 'react-router-dom'
+import { ArrowLeft, Home, Users } from 'lucide-react'
 import { Board } from '@/components/board/Board'
 import { useBoard } from '@/hooks/useBoard'
+import { useAuth } from '@/hooks/useAuth'
 
 export function BoardView() {
   const { boardId } = useParams<{ boardId: string }>()
+  const { user, signOut } = useAuth()
   
   // Redirect to dashboard if no boardId
   if (!boardId) {
@@ -72,8 +75,53 @@ export function BoardView() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Board board={board} className="flex-1" />
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100">
+      {/* Navigation Header */}
+      <nav className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-14">
+            {/* Left side - Back button and board title */}
+            <div className="flex items-center space-x-4">
+              <Link
+                to="/dashboard"
+                className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                <span className="hidden sm:inline">Back to Dashboard</span>
+              </Link>
+              <div className="h-6 w-px bg-gray-300"></div>
+              <h1 className="text-lg font-semibold text-gray-900 truncate">
+                {board.name}
+              </h1>
+            </div>
+
+            {/* Right side - User menu */}
+            <div className="flex items-center space-x-3">
+              <button className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
+                <Users className="w-5 h-5" />
+                <span className="hidden sm:inline">Share</span>
+              </button>
+              
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <span className="hidden sm:inline">
+                  {user?.user_metadata?.full_name || user?.email}
+                </span>
+                <button
+                  onClick={signOut}
+                  className="text-gray-500 hover:text-gray-700 text-sm"
+                >
+                  Sign out
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Board Content */}
+      <div className="flex-1 overflow-hidden">
+        <Board board={board} className="h-full" />
+      </div>
     </div>
   )
 }

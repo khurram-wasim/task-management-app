@@ -321,25 +321,34 @@ router.put(
 
     const result = await taskService.updateTask(taskId, cleanData, userId)
 
+    // Get the complete task with labels for response and broadcasting
+    const completeTaskResult = await taskService.getTaskById(taskId, userId)
+    
     // Broadcast task update to all connected users
-    if (result.data) {
+    if (completeTaskResult.data) {
       const boardId = await taskService.getBoardIdFromTask(taskId)
       if (boardId) {
         const taskResponse: TaskResponse = {
-          id: result.data.id,
-          title: result.data.title,
-          description: result.data.description || null,
-          listId: result.data.list_id,
-          dueDate: result.data.due_date || null,
-          position: result.data.position,
-          createdAt: result.data.created_at,
-          updatedAt: result.data.updated_at
+          id: completeTaskResult.data.id,
+          title: completeTaskResult.data.title,
+          description: completeTaskResult.data.description || null,
+          listId: completeTaskResult.data.list_id,
+          dueDate: completeTaskResult.data.due_date || null,
+          position: completeTaskResult.data.position,
+          createdAt: completeTaskResult.data.created_at,
+          updatedAt: completeTaskResult.data.updated_at,
+          labels: completeTaskResult.data.labels?.map(label => ({
+            id: label.id,
+            name: label.label_name,
+            color: label.label_color
+          })) || []
         }
         realtimeService.broadcastTaskUpdate(boardId, 'updated', taskResponse, userId)
       }
     }
 
-    ResponseHelper.success(res, result.data, 'Task updated successfully')
+    // Return the complete task with labels
+    ResponseHelper.success(res, completeTaskResult.data, 'Task updated successfully')
   })
 )
 
@@ -405,6 +414,10 @@ router.put(
       return
     }
 
+    // Get the current task first to capture the old list ID for real-time updates
+    const currentTaskResult = await taskService.getTaskById(taskId, userId)
+    const oldListId = currentTaskResult.data?.listId
+
     const result = await taskService.moveTask(taskId, listId, position, userId)
 
     // Broadcast task move to all connected users
@@ -421,7 +434,16 @@ router.put(
           createdAt: result.data.created_at,
           updatedAt: result.data.updated_at
         }
-        realtimeService.broadcastTaskUpdate(boardId, 'moved', taskResponse, userId)
+        
+        // Pass correct parameters: boardId, action, task, oldListId, newListId, excludeUserId
+        realtimeService.broadcastTaskUpdate(
+          boardId, 
+          'moved', 
+          taskResponse, 
+          oldListId,     // old list ID 
+          listId,        // new list ID
+          undefined      // don't exclude anyone - include all users for better real-time experience
+        )
       }
     }
 

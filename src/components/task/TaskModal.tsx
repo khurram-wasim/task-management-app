@@ -22,7 +22,7 @@ export function TaskModal({
   onTaskUpdated, 
   onTaskDeleted 
 }: TaskModalProps) {
-  const { task, loading, error, updateTask } = useTask(taskId)
+  const { task, loading, error, updateTask, fetchTask } = useTask(taskId)
   const { deleteTask, addTaskLabel, removeTaskLabel } = useTasks(task?.list_id || null)
   
   const [editedTitle, setEditedTitle] = useState('')
@@ -114,13 +114,19 @@ export function TaskModal({
       setNewLabelName('')
       setNewLabelColor('#3b82f6')
       setShowAddLabel(false)
+      // Refresh the individual task to show the new label in the modal
+      await fetchTask()
     }
   }
 
   const handleRemoveLabel = async (labelId: string) => {
     if (!task) return
     
-    await removeTaskLabel(task.id, labelId)
+    const result = await removeTaskLabel(task.id, labelId)
+    if (result.success) {
+      // Refresh the individual task to show the updated labels in the modal
+      await fetchTask()
+    }
   }
 
   const handleClose = () => {

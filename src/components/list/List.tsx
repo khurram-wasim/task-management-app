@@ -11,17 +11,18 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Task, TaskModal } from '@/components/task'
 import { useTasks } from '@/hooks/useTasks'
-import { useLists } from '@/hooks/useLists'
-import type { List as ListType } from '@/types'
+import type { List as ListType, UpdateListRequest } from '@/types'
 import { cn } from '@/utils/classNames'
 
 interface ListProps {
   list: ListType
   boardId: string
+  onUpdateList?: (listId: string, updates: UpdateListRequest) => Promise<{ success: boolean; error?: string }>
+  onDeleteList?: (listId: string) => Promise<{ success: boolean; error?: string }>
   className?: string
 }
 
-export function List({ list, boardId, className }: ListProps) {
+export function List({ list, boardId, onUpdateList, onDeleteList, className }: ListProps) {
   const [isEditingName, setIsEditingName] = useState(false)
   const [editedName, setEditedName] = useState(list.name)
   const [isAddingTask, setIsAddingTask] = useState(false)
@@ -43,15 +44,15 @@ export function List({ list, boardId, className }: ListProps) {
     tasks,
     loading: tasksLoading,
     error: tasksError,
-    createTask
+    createTask,
+    fetchTasks
   } = useTasks(list.id)
 
-  // List management hooks (from board context)
-  const { updateList, deleteList } = useLists(boardId)
+  // List management functions (passed from board)
 
   const handleSaveName = async () => {
-    if (editedName.trim() && editedName !== list.name) {
-      const result = await updateList(list.id, { name: editedName.trim() })
+    if (editedName.trim() && editedName !== list.name && onUpdateList) {
+      const result = await onUpdateList(list.id, { name: editedName.trim() })
       if (result.success) {
         setIsEditingName(false)
       } else {
@@ -69,6 +70,8 @@ export function List({ list, boardId, className }: ListProps) {
   }
 
   const handleDeleteList = async () => {
+    if (!onDeleteList) return
+    
     if (tasks.length > 0) {
       const confirmed = window.confirm(
         `Are you sure you want to delete "${list.name}"? This will also delete all ${tasks.length} tasks in this list.`
@@ -76,7 +79,7 @@ export function List({ list, boardId, className }: ListProps) {
       if (!confirmed) return
     }
 
-    const result = await deleteList(list.id)
+    const result = await onDeleteList(list.id)
     if (result.success) {
       setShowMenu(false)
     }
@@ -249,8 +252,8 @@ export function List({ list, boardId, className }: ListProps) {
         isOpen={!!selectedTaskId}
         onClose={() => setSelectedTaskId(null)}
         onTaskUpdated={() => {
-          // The useTasks hook should automatically refresh
-          // when a task is updated via the API
+          // Refresh the task list to show updated task data
+          fetchTasks()
         }}
         onTaskDeleted={() => {
           setSelectedTaskId(null)

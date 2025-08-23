@@ -72,9 +72,22 @@ export class TaskService {
 
       logger.info('Successfully retrieved list tasks', { listId, userId, count: data?.length || 0 })
 
+      // Transform the Supabase results to match our TypeScript interface
+      const tasksWithLabels: TaskWithLabels[] = (data || []).map(task => ({
+        id: task.id,
+        list_id: task.list_id,
+        title: task.title,
+        description: task.description,
+        due_date: task.due_date,
+        position: task.position,
+        created_at: task.created_at,
+        updated_at: task.updated_at,
+        labels: task.task_labels || []
+      }))
+
       return {
         success: true,
-        data: (data as TaskWithLabels[]) || []
+        data: tasksWithLabels
       }
     } catch (error) {
       logger.error('Error in getListTasks', error as Error)
@@ -116,9 +129,22 @@ export class TaskService {
 
       logger.info('Successfully retrieved task', { taskId, userId })
 
+      // Transform the Supabase result to match our TypeScript interface
+      const taskWithLabels: TaskWithLabels = {
+        id: data.id,
+        list_id: data.list_id,
+        title: data.title,
+        description: data.description,
+        due_date: data.due_date,
+        position: data.position,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+        labels: data.task_labels || []
+      }
+
       return {
         success: true,
-        data: data as TaskWithLabels
+        data: taskWithLabels
       }
     } catch (error) {
       logger.error('Error in getTaskById', error as Error)
@@ -488,16 +514,26 @@ export class TaskService {
 
       const { error } = await this.supabase
         .from('task_labels')
-        .insert({
+        .upsert({
           task_id: taskId,
           label_name: labelName,
           label_color: labelColor,
           created_at: new Date().toISOString()
+        }, {
+          onConflict: 'task_id,label_name',
+          ignoreDuplicates: true
         })
 
       if (error) {
-        logger.error('Failed to add task label', error as Error)
-        throw createDatabaseError('Failed to add label')
+        logger.error('Failed to add task label', error as Error, { taskId, labelName, labelColor })
+        
+        // Handle specific error cases
+        if (error.message?.includes('duplicate key') || error.code === '23505') {
+          logger.info('Label already exists on task, ignoring duplicate', { taskId, labelName })
+          // Don't throw error for duplicates, just log and continue
+        } else {
+          throw createDatabaseError('Failed to add label')
+        }
       }
 
       logger.info('Successfully added task label', { taskId, labelName, userId })

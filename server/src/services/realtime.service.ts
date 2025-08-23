@@ -212,14 +212,29 @@ export class RealtimeService {
     
     ws.on('message', (message) => {
       try {
-        const data = JSON.parse(message.toString())
+        const rawMessage = message.toString()
+        console.log('🔍 RAW WebSocket message received:', rawMessage)
+        
+        const data = JSON.parse(rawMessage)
+        console.log('🔍 PARSED WebSocket data:', JSON.stringify(data, null, 2))
+        
         logger.realtime('WebSocket message received', data.boardId, data.userId, this.wss?.clients.size)
         
         // Handle different message types
         switch (data.type) {
           case 'subscribe_board':
+            console.log('🔍 Processing subscribe_board:', {
+              boardId: data.boardId,
+              userId: data.userId,
+              hasUserId: !!data.userId
+            })
             if (data.boardId && data.userId) {
               this.subscribeToBoard(ws, data.boardId, data.userId)
+            } else {
+              console.error('❌ Missing boardId or userId:', {
+                boardId: data.boardId,
+                userId: data.userId
+              })
             }
             break
             

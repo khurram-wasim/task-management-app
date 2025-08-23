@@ -13,17 +13,27 @@ export class BoardService {
   }
 
   // Get all boards for a user
-  async getUserBoards(userId: string, page: number = 1, limit: number = 20): Promise<ServiceResponse<{ boards: Board[]; total: number }>> {
+  async getUserBoards(userId: string, page: number = 1, limit: number = 20): Promise<ServiceResponse<{ boards: any[]; total: number }>> {
     try {
       logger.debug('Getting user boards', { userId, page, limit })
 
       const offset = (page - 1) * limit
 
-      // Get boards where user is owner
-      // Simplified query without complex joins for now
+      // Get boards where user is owner with statistics
       const { data: ownedBoards, error: ownedError } = await this.supabase
         .from('boards')
-        .select('*')
+        .select(`
+          *,
+          lists (
+            id,
+            tasks (
+              id
+            )
+          ),
+          board_collaborators (
+            id
+          )
+        `)
         .eq('user_id', userId)
         .range(offset, offset + limit - 1)
         .order('created_at', { ascending: false })
@@ -33,10 +43,24 @@ export class BoardService {
         throw createDatabaseError('Failed to fetch boards')
       }
 
-      // For now, just return owned boards (simplified approach)
-      // TODO: Add collaborative boards in a future enhancement
-      const data = ownedBoards
-      const count = ownedBoards?.length || 0
+      // Transform the data to include statistics
+      const data = ownedBoards?.map(board => ({
+        id: board.id,
+        user_id: board.user_id,
+        name: board.name,
+        description: board.description,
+        created_at: board.created_at,
+        updated_at: board.updated_at,
+        lists_count: (board as any).lists?.length || 0,
+        tasks_count: (board as any).lists?.reduce((total: number, list: any) => 
+          total + (list.tasks?.length || 0), 0) || 0,
+        collaborators_count: (board as any).board_collaborators?.length || 0,
+        last_activity: board.updated_at,
+        is_owner: true,
+        role: 'owner' as const
+      })) || []
+      
+      const count = data.length
 
 
       logger.info('Successfully retrieved user boards', { userId, count: data?.length || 0 })
@@ -44,8 +68,8 @@ export class BoardService {
       return {
         success: true,
         data: {
-          boards: (data as Board[]) || [],
-          total: count || 0
+          boards: data,
+          total: count
         }
       }
     } catch (error) {

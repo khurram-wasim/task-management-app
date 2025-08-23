@@ -23,7 +23,8 @@ import { Input } from '@/components/ui/Input'
 import { List } from '@/components/list'
 import { Task } from '@/components/task'
 import { useLists } from '@/hooks/useLists'
-// import { useTasks } from '@/hooks/useTasks'
+import { useBoardRealtime } from '@/hooks/useRealtime'
+import { api } from '@/lib/api'
 import type { Board as BoardType, Task as TaskType } from '@/types'
 import { cn } from '@/utils/classNames'
 
@@ -44,18 +45,44 @@ export function Board({ board, className }: BoardProps) {
     loading: listsLoading,
     error: listsError,
     createList,
-    // updateList
+    updateList,
+    deleteList,
+    fetchLists
   } = useLists(board.id)
+
+  // Subscribe to real-time updates for this board
+  useBoardRealtime(board.id, {
+    onListChange: (payload) => {
+      console.log('Real-time list change:', payload)
+      // Refetch lists to get the latest data
+      fetchLists()
+    },
+    onTaskChange: (payload) => {
+      console.log('Real-time task change:', payload)
+      // Refetch lists to get the latest tasks
+      fetchLists()
+    }
+  })
 
   // For moving tasks between lists, we'll use API directly since we need cross-list operations
   const moveTaskBetweenLists = async (taskId: string, targetListId: string, position: number) => {
     try {
-      // For now, we'll use the API directly since we need cross-list operations
-      // In a real app, this would be handled by a global state manager
       console.log('Moving task', taskId, 'to list', targetListId, 'at position', position)
-      // TODO: Implement API call for moving tasks between lists
+      
+      await api.moveTask(taskId, {
+        listId: targetListId,
+        position: position
+      })
+      
+      console.log('Task moved successfully')
+      
+      // Immediately refresh the UI to show the change
+      await fetchLists()
+      
+      // Note: Real-time updates will also trigger for other users
     } catch (error) {
       console.error('Failed to move task:', error)
+      // TODO: Show user-friendly error notification
     }
   }
 
@@ -155,14 +182,28 @@ export function Board({ board, className }: BoardProps) {
         
         // Move task to different list or reorder within same list
         if (activeTask && overTask) {
-          moveTaskBetweenLists(activeTask.id, overTask.list_id, overTask.position)
+          // Calculate the correct position
+          let newPosition = overTask.position
+          
+          // If moving to the same list and dragging downward, insert after the target
+          if (activeTask.list_id === overTask.list_id && activeTask.position < overTask.position) {
+            newPosition = overTask.position + 1
+          }
+          
+          moveTaskBetweenLists(activeTask.id, overTask.list_id, newPosition)
         }
       } else if (overType === 'list') {
         const overListId = over.data.current?.list?.id
         
         // Move task to end of list
-        if (activeTask && overListId && activeTask.list_id !== overListId) {
-          moveTaskBetweenLists(activeTask.id, overListId, 999) // Move to end
+        if (activeTask && overListId) {
+          // Only move if it's a different list or we want to move to end of same list
+          const targetList = lists.find(list => list.id === overListId)
+          if (targetList) {
+            // Get tasks count for this list to position at the end
+            // For now, use a large number to ensure it goes to the end
+            moveTaskBetweenLists(activeTask.id, overListId, 999)
+          }
         }
       }
     }
@@ -246,6 +287,8 @@ export function Board({ board, className }: BoardProps) {
                   key={list.id}
                   list={list}
                   boardId={board.id}
+                  onUpdateList={updateList}
+                  onDeleteList={deleteList}
                 />
               ))}
 
