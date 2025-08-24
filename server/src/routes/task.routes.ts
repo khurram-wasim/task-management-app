@@ -319,7 +319,7 @@ router.put(
       cleanData.list_id = updateData.listId
     }
 
-    const result = await taskService.updateTask(taskId, cleanData, userId)
+    await taskService.updateTask(taskId, cleanData, userId)
 
     // Get the complete task with labels for response and broadcasting
     const completeTaskResult = await taskService.getTaskById(taskId, userId)
@@ -416,7 +416,7 @@ router.put(
 
     // Get the current task first to capture the old list ID for real-time updates
     const currentTaskResult = await taskService.getTaskById(taskId, userId)
-    const oldListId = currentTaskResult.data?.listId
+    const oldListId = currentTaskResult.data?.list_id
 
     const result = await taskService.moveTask(taskId, listId, position, userId)
 

@@ -16,13 +16,12 @@ import { cn } from '@/utils/classNames'
 
 interface ListProps {
   list: ListType
-  boardId: string
   onUpdateList?: (listId: string, updates: UpdateListRequest) => Promise<{ success: boolean; error?: string }>
   onDeleteList?: (listId: string) => Promise<{ success: boolean; error?: string }>
   className?: string
 }
 
-export function List({ list, boardId, onUpdateList, onDeleteList, className }: ListProps) {
+export function List({ list, onUpdateList, onDeleteList, className }: ListProps) {
   const [isEditingName, setIsEditingName] = useState(false)
   const [editedName, setEditedName] = useState(list.name)
   const [isAddingTask, setIsAddingTask] = useState(false)

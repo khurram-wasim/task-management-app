@@ -51,23 +51,34 @@ app.get('/health', (_req, res) => {
   })
 })
 
-// Basic API routes placeholder
-app.get('/api/health', (_req, res) => {
-  res.status(200).json({ 
-    status: 'OK', 
-    timestamp: new Date().toISOString(),
-    message: 'API endpoint is working'
+// Import API routes (now with resolved paths)
+try {
+  const apiRoutes = require('../dist/routes/index.js').default
+  app.use('/api', apiRoutes)
+  console.log('✅ API routes loaded successfully')
+} catch (error) {
+  console.error('❌ Failed to load API routes:', error.message)
+  console.error('Full error:', error)
+  
+  // Fallback health endpoint
+  app.get('/api/health', (_req, res) => {
+    res.status(200).json({ 
+      status: 'OK', 
+      timestamp: new Date().toISOString(),
+      message: 'API health check (routes failed to load)',
+      error: error.message
+    })
   })
-})
 
-// Temporary auth endpoint for testing
-app.post('/api/auth/login', (req, res) => {
-  res.status(501).json({ 
-    error: 'Authentication not yet configured',
-    message: 'Please set up environment variables',
-    timestamp: new Date().toISOString()
+  // Return proper error for auth endpoints
+  app.all('/api/*', (_req, res) => {
+    res.status(503).json({ 
+      error: 'Service temporarily unavailable',
+      message: `Failed to load routes: ${error.message}`,
+      timestamp: new Date().toISOString()
+    })
   })
-})
+}
 
 // 404 handler
 app.use('*', (req, res) => {
@@ -79,7 +90,7 @@ app.use('*', (req, res) => {
 })
 
 // Error handler
-app.use((error: any, req: any, res: any, next: any) => {
+app.use((error: any, _req: any, res: any, _next: any) => {
   console.error('API Error:', error)
   res.status(500).json({ 
     error: 'Internal Server Error',

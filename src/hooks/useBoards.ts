@@ -36,11 +36,11 @@ export function useBoards(initialFilters?: BoardFilters) {
       console.log('useBoards fetchBoards - received response:', response)
       const boardsWithStats: BoardWithStats[] = response.boards.map(board => ({
         ...board,
-        lists_count: board.lists_count || 0,
-        tasks_count: board.tasks_count || 0,
-        collaborators_count: board.collaborators_count || 0,
-        is_owner: board.is_owner !== undefined ? board.is_owner : true,
-        role: board.role || 'owner' as const
+        lists_count: 0,
+        tasks_count: 0,
+        collaborators_count: 0,
+        is_owner: true,
+        role: 'owner' as const
       }))
       setState(prev => ({
         ...prev,

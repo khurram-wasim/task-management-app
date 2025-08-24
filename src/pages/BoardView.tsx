@@ -1,5 +1,5 @@
 import { useParams, Navigate, Link } from 'react-router-dom'
-import { ArrowLeft, Home, Users } from 'lucide-react'
+import { ArrowLeft, Users } from 'lucide-react'
 import { Board } from '@/components/board/Board'
 import { useBoard } from '@/hooks/useBoard'
 import { useAuth } from '@/hooks/useAuth'

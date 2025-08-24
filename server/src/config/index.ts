@@ -11,7 +11,7 @@ export const CONFIG = {
   
   // Rate limiting
   RATE_LIMIT_WINDOW: 15 * 60 * 1000, // 15 minutes
-  RATE_LIMIT_MAX_REQUESTS: process.env.NODE_ENV === 'development' ? 1000 : 100, // Higher limit for development
+  RATE_LIMIT_MAX_REQUESTS: process.env['NODE_ENV'] === 'development' ? 1000 : 100, // Higher limit for development
   
   // Authentication
   JWT_ALGORITHM: 'HS256' as const,

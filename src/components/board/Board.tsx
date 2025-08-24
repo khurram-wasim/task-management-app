@@ -286,7 +286,6 @@ export function Board({ board, className }: BoardProps) {
                 <List
                   key={list.id}
                   list={list}
-                  boardId={board.id}
                   onUpdateList={updateList}
                   onDeleteList={deleteList}
                 />

@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
+    "build": "tsc && tsc-alias",
     "start": "node dist/index.js",
     "test": "vitest",
     "test:watch": "vitest --watch",
@@ -53,6 +53,7 @@
     "@vercel/node": "5.3.13",
     "eslint": "^9.13.0",
     "globals": "16.3.0",
+    "tsc-alias": "1.8.16",
     "tsx": "^4.19.2",
     "typescript": "^5.8.3",
     "vitest": "^2.1.4"

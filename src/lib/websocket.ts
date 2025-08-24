@@ -251,7 +251,7 @@ class WebSocketManager {
       const originalOnOpen = this.ws?.onopen
       if (this.ws) {
         this.ws.onopen = (event) => {
-          if (originalOnOpen) originalOnOpen.call(this.ws, event)
+          if (originalOnOpen && this.ws) originalOnOpen.call(this.ws, event)
           sendSubscription()
         }
       }
